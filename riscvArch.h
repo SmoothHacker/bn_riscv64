@@ -5,11 +5,12 @@
 
 class riscvArch : public BinaryNinja::Architecture {
     size_t addressSize = 32;
+    BNEndianness endian;
 
     static BNRegisterInfo RegisterInfo(uint32_t fullWidthReg, size_t offset, size_t size);
 
 public:
-    explicit riscvArch(const std::string &name) : Architecture(name) {}
+    riscvArch(const std::string &name, BNEndianness endian_);
 
     BNEndianness GetEndianness() const override;
 

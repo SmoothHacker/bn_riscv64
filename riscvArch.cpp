@@ -2,7 +2,7 @@
 #include "disassembler.h"
 
 BNEndianness riscvArch::GetEndianness() const {
-    return BigEndian;
+    return endian;
 }
 
 size_t riscvArch::GetAddressSize() const {
@@ -12,9 +12,7 @@ size_t riscvArch::GetAddressSize() const {
 // Responsible for disassembling instructions and feeding BN info for the CFG
 bool
 riscvArch::GetInstructionInfo(const uint8_t *data, uint64_t addr, size_t maxLen, BinaryNinja::InstructionInfo &result) {
-    Disassembler disassembler;
-
-    Instruction res = disassembler.disasm(data, addr, maxLen);
+    //Instruction res = Disassembler::disasm(data, addr, maxLen, endian);
     result.length = 1;
     return true;
 }
@@ -22,8 +20,7 @@ riscvArch::GetInstructionInfo(const uint8_t *data, uint64_t addr, size_t maxLen,
 // Provides the text that BN displays for disassembly view
 bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &len,
                                    std::vector<BinaryNinja::InstructionTextToken> &result) {
-    Disassembler disassembler;
-    Instruction res = disassembler.disasm(data, addr, 4);
+    Instruction res = Disassembler::disasm(data, addr, len, endian);
 
     switch (res.type) {
         case Rtype: {
@@ -35,14 +32,16 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
         }
         case Itype: {
             char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, 0x%llu(%s)", res.mnemonic.c_str(), registerNames[res.rd], res.imm, registerNames[res.rs1]);
+            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, %s, %lld", res.mnemonic.c_str(),
+                              registerNames[res.rd], registerNames[res.rs1], res.imm);
             if(ret == -1) return false;
             result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
             break;
         }
         case Stype: {
             char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, -0x%llu(%s)", res.mnemonic.c_str(), registerNames[res.rd], res.imm, registerNames[res.rs1]);
+            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, %lld(%s)", res.mnemonic.c_str(),
+                              registerNames[res.rs2], res.imm, registerNames[res.rs1]);
             if(ret == -1) return false;
             result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
             break;
@@ -63,11 +62,14 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
         }
         case Jtype: {
             char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, 0x%llx", res.mnemonic.c_str(), registerNames[res.rd], res.imm);
-            if(ret == -1) return false;
+            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, 0x%llx", res.mnemonic.c_str(),
+                              registerNames[res.rd], res.imm);
+            if (ret == -1) return false;
             result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
             break;
         }
+        case Error:
+            return false;
     }
     len = 4;
     return true;
@@ -130,4 +132,8 @@ BNRegisterInfo riscvArch::RegisterInfo(uint32_t fullWidthReg, size_t offset, siz
 
 uint32_t riscvArch::GetStackPointerRegister() {
     return Registers::Pc;
+}
+
+riscvArch::riscvArch(const std::string &name, BNEndianness endian_) : Architecture(name) {
+    endian = endian_;
 }
