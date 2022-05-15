@@ -12,3 +12,5 @@ set(SOURCE
 
 add_library(bn_riscv_arch SHARED ${SOURCE})
 target_link_libraries(bn_riscv_arch binaryninjaapi)
+
+bn_install_plugin(bn_riscv_arch)
