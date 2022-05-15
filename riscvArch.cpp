@@ -25,7 +25,6 @@ riscvArch::GetInstructionInfo(const uint8_t *data, uint64_t addr, size_t maxLen,
 // Provides the text that BN displays for disassembly view
 bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &len,
                                    std::vector<BinaryNinja::InstructionTextToken> &result) {
-    BinaryNinja::Log(DebugLog, "addr: 0x%llx, data: 0x%llx, Len: %zu", addr, *data, len);
     Instruction res = Disassembler::disasm(data, addr);
     if (res.type == InstrType::Error) {
         len = 0;
@@ -35,7 +34,7 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
     switch (res.type) {
         case Rtype: {
             char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, %s, %s", res.mnemonic.c_str(),
+            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, %s, %s", instrNames[res.mnemonic],
                               registerNames[res.rd], registerNames[res.rs1], registerNames[res.rs2]);
             if (ret == -1) return false;
             result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
@@ -43,7 +42,7 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
         }
         case Itype: {
             char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, %s, %lld", res.mnemonic.c_str(),
+            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, %s, %lld", instrNames[res.mnemonic],
                               registerNames[res.rd], registerNames[res.rs1], res.imm);
             if(ret == -1) return false;
             result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
@@ -51,7 +50,7 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
         }
         case Stype: {
             char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, %lld(%s)", res.mnemonic.c_str(),
+            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, %lld(%s)", instrNames[res.mnemonic],
                               registerNames[res.rs2], res.imm, registerNames[res.rs1]);
             if(ret == -1) return false;
             result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
@@ -59,21 +58,23 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
         }
         case Btype: {
             char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, %s, 0x%llx", res.mnemonic.c_str(), registerNames[res.rs1], registerNames[res.rs2], res.imm);
+            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, %s, 0x%llx", instrNames[res.mnemonic],
+                              registerNames[res.rs1], registerNames[res.rs2], res.imm);
             if(ret == -1) return false;
             result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
             break;
         }
         case Utype: {
             char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, 0x%llx", res.mnemonic.c_str(), registerNames[res.rd], res.imm);
+            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, 0x%llx", instrNames[res.mnemonic],
+                              registerNames[res.rd], res.imm);
             if(ret == -1) return false;
             result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
             break;
         }
         case Jtype: {
             char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, 0x%llx", res.mnemonic.c_str(),
+            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, 0x%llx", instrNames[res.mnemonic],
                               registerNames[res.rd], res.imm);
             if (ret == -1) return false;
             result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);

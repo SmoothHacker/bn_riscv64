@@ -12,25 +12,25 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
         case 0b0110111: {
             // LUI
             instr = implUtype(*insdword);
-            instr.mnemonic = std::string("lui");
+            instr.mnemonic = InstrName::LUI;
             return instr;
         }
         case 0b0010111: {
             // AUIPC
             instr = implUtype(*insdword);
-            instr.mnemonic = std::string("auipc");
+            instr.mnemonic = InstrName::AUIPC;
             return instr;
         }
         case 0b1101111: {
             // JAL
             instr = implJtype(*insdword);
-            instr.mnemonic = std::string("jal");
+            instr.mnemonic = InstrName::JAL;
             return instr;
         }
         case 0b1100111: {
             // JALR
             instr = implItype(*insdword);
-            instr.mnemonic = std::string("jalr");
+            instr.mnemonic = InstrName::JALR;
             return instr;
         }
         case 0b1100011: {
@@ -39,26 +39,27 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
 
             switch (instr.funct3) {
                 case 0b000:
-                    instr.mnemonic = std::string("beq");
+                    instr.mnemonic = InstrName::BEQ;
                     break;
                 case 0b001:
-                    instr.mnemonic = std::string("bne");
+                    instr.mnemonic = InstrName::BNE;
                     break;
                 case 0b100:
-                    instr.mnemonic = std::string("blt");
+                    instr.mnemonic = InstrName::BLT;
                     break;
                 case 0b101:
-                    instr.mnemonic = std::string("bge");
+                    instr.mnemonic = InstrName::BGE;
                     break;
                 case 0b110:
-                    instr.mnemonic = std::string("bltu");
+                    instr.mnemonic = InstrName::BLTU;
                     break;
                 case 0b111:
-                    instr.mnemonic = std::string("bgeu");
+                    instr.mnemonic = InstrName::BGEU;
                     break;
                 default:
                     BinaryNinja::Log(ErrorLog, "Unknown funct3 [%d] for Branch instr", instr.funct3);
                     instr.type = InstrType::Error;
+                    instr.mnemonic = InstrName::UNSUPPORTED;
                     break;
             }
 
@@ -70,23 +71,27 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
 
             switch (instr.funct3) {
                 case 0b000:
-                    instr.mnemonic = std::string("lb");
+                    instr.mnemonic = InstrName::LB;
                     break;
                 case 0b001:
-                    instr.mnemonic = std::string("lh");
+                    instr.mnemonic = InstrName::LH;
                     break;
                 case 0b010:
-                    instr.mnemonic = std::string("lw");
+                    instr.mnemonic = InstrName::LW;
+                    break;
+                case 0b011:
+                    instr.mnemonic = InstrName::LD;
                     break;
                 case 0b100:
-                    instr.mnemonic = std::string("lbu");
+                    instr.mnemonic = InstrName::LBU;
                     break;
                 case 0b101:
-                    instr.mnemonic = std::string("lhu");
+                    instr.mnemonic = InstrName::LHU;
                     break;
                 default:
                     BinaryNinja::Log(ErrorLog, "Unknown funct3 [%d] for Load instr", instr.funct3);
                     instr.type = InstrType::Error;
+                    instr.mnemonic = InstrName::UNSUPPORTED;
                     break;
             }
 
@@ -98,20 +103,21 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
 
             switch (instr.funct3) {
                 case 0b000:
-                    instr.mnemonic = std::string("sb");
+                    instr.mnemonic = InstrName::SB;
                     break;
                 case 0b001:
-                    instr.mnemonic = std::string("sh");
+                    instr.mnemonic = InstrName::SH;
                     break;
                 case 0b010:
-                    instr.mnemonic = std::string("sw");
+                    instr.mnemonic = InstrName::SW;
                     break;
                 case 0b011:
-                    instr.mnemonic = std::string("sd");
+                    instr.mnemonic = InstrName::SD;
                     break;
                 default:
                     BinaryNinja::Log(ErrorLog, "Unknown funct3 [%d] for Store instr", instr.funct3);
                     instr.type = InstrType::Error;
+                    instr.mnemonic = InstrName::UNSUPPORTED;
                     break;
             }
             return instr;
@@ -123,29 +129,30 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
             switch (instr.funct3) {
                 case 0b000: {
                     // Covers pseudo-instr load immediate - li
-                    instr.mnemonic = std::string("addi");
+                    instr.mnemonic = InstrName::ADDI;
                     break;
                 }
                 case 0b010:
-                    instr.mnemonic = std::string("slti");
+                    instr.mnemonic = InstrName::SLTI;
                     break;
                 case 0b011:
-                    instr.mnemonic = std::string("sltiu");
+                    instr.mnemonic = InstrName::SLTIU;
                     break;
                 case 0b100:
-                    instr.mnemonic = std::string("xori");
+                    instr.mnemonic = InstrName::XORI;
                     break;
                 case 0b110:
-                    instr.mnemonic = std::string("ori");
+                    instr.mnemonic = InstrName::ORI;
                     break;
                 case 0b111:
-                    instr.mnemonic = std::string("andi");
+                    instr.mnemonic = InstrName::ANDI;
                     break;
                     // TODO implement SLLI, SRLI, SRAI
                 default:
                     BinaryNinja::Log(ErrorLog, "Unknown funct3 [%d] for Immediate Arithmetic instr",
                                      instr.funct3);
                     instr.type = InstrType::Error;
+                    instr.mnemonic = InstrName::UNSUPPORTED;
                     break;
             }
             return instr;
@@ -156,45 +163,46 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
             switch (instr.funct3) {
                 case 0b000: {
                     if (instr.funct7 == 0)
-                        instr.mnemonic = std::string("add");
+                        instr.mnemonic = InstrName::ADD;
                     else
-                        instr.mnemonic = std::string("sub");
+                        instr.mnemonic = InstrName::SUB;
                     break;
                 }
                 case 0b001: {
-                    instr.mnemonic = std::string("sll");
+                    instr.mnemonic = InstrName::SLL;
                     break;
                 }
                 case 0b010: {
-                    instr.mnemonic = std::string("slt");
+                    instr.mnemonic = InstrName::SLT;
                     break;
                 }
                 case 0b011: {
-                    instr.mnemonic = std::string("sltu");
+                    instr.mnemonic = InstrName::SLTU;
                     break;
                 }
                 case 0b100: {
-                    instr.mnemonic = std::string("xor");
+                    instr.mnemonic = InstrName::XOR;
                     break;
                 }
                 case 0b101: {
                     if (instr.funct7 == 0)
-                        instr.mnemonic = std::string("srl");
+                        instr.mnemonic = InstrName::SRL;
                     else
-                        instr.mnemonic = std::string("sra");
+                        instr.mnemonic = InstrName::SRA;
                     break;
                 }
                 case 0b110: {
-                    instr.mnemonic = std::string("or");
+                    instr.mnemonic = InstrName::OR;
                     break;
                 }
                 case 0b111: {
-                    instr.mnemonic = std::string("and");
+                    instr.mnemonic = InstrName::AND;
                     break;
                 }
                 default:
                     BinaryNinja::Log(ErrorLog, "Unknown funct3 [%d] for Register Arithmetic instr", instr.funct3);
                     instr.type = InstrType::Error;
+                    instr.mnemonic = InstrName::UNSUPPORTED;
                     break;
             }
             return instr;
@@ -203,14 +211,15 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
             // ECALL or EBREAK
             instr = implItype(*insdword);
             if (instr.imm != 0)
-                instr.mnemonic = std::string("EBREAK");
+                instr.mnemonic = InstrName::EBREAK;
             else
-                instr.mnemonic = std::string("ECALL");
+                instr.mnemonic = InstrName::ECALL;
             return instr;
         }
         default:
             BinaryNinja::Log(ErrorLog, "Unimplemented instr - Opcode: 0x%x\n", opcode);
             instr.type = InstrType::Error;
+            instr.mnemonic = InstrName::UNSUPPORTED;
             return instr;
     }
 }

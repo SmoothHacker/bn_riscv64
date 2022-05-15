@@ -79,9 +79,65 @@ static const char *registerNames[] = {
         "pc"
 };
 
-enum InstructionName {
+static const char *instrNames[] = {
+        "lui",
+        "auipc",
+        "jal",
+        "jalr",
+        "beq",
+        "bne",
+        "blt",
+        "bge",
+        "bltu",
+        "bgeu",
+        "lb",
+        "lh",
+        "lw",
+        "lbu",
+        "lhu",
+        "sb",
+        "sh",
+        "sw",
+        "addi",
+        "slti",
+        "sltiu",
+        "xori",
+        "ori",
+        "andi",
+        "slli",
+        "srli",
+        "add",
+        "sub",
+        "sll",
+        "slt",
+        "sltu",
+        "xor",
+        "srl",
+        "sra",
+        "or",
+        "and",
+        "fence",
+        "ecall",
+        "ebreak",
+        "lwu",
+        "ld",
+        "sd",
+        "srai",
+        "addiw",
+        "slliw",
+        "srliw",
+        "sraiw",
+        "addw",
+        "subw",
+        "sllw",
+        "srlw",
+        "sraw"
+};
+
+enum InstrName {
+    UNSUPPORTED,
 // RV32I Base
-    LUI,
+    LUI = 0,
     AUIPC,
     JAL,
     JALR,
@@ -149,13 +205,13 @@ enum InstrType {
 class Instruction {
 public:
     InstrType type = Error;
-    std::string mnemonic;
-    size_t rd;
-    size_t rs1;
-    size_t rs2;
-    uint32_t funct7;
-    uint32_t funct3;
-    int64_t imm;
+    InstrName mnemonic = InstrName::UNSUPPORTED;
+    size_t rd = 0;
+    size_t rs1 = 0;
+    size_t rs2 = 0;
+    uint32_t funct7 = 0;
+    uint32_t funct3 = 0;
+    int64_t imm = 0;
 };
 
 class Disassembler {
