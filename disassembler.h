@@ -79,8 +79,65 @@ static const char *registerNames[] = {
         "pc"
 };
 
+enum InstructionName {
+// RV32I Base
+    LUI,
+    AUIPC,
+    JAL,
+    JALR,
+    BEQ,
+    BNE,
+    BLT,
+    BGE,
+    BLTU,
+    BGEU,
+    LB,
+    LH,
+    LW,
+    LBU,
+    LHU,
+    SB,
+    SH,
+    SW,
+    ADDI,
+    SLTI,
+    SLTIU,
+    XORI,
+    ORI,
+    ANDI,
+    SLLI,
+    SRLI,
+    ADD,
+    SUB,
+    SLL,
+    SLT,
+    SLTU,
+    XOR,
+    SRL,
+    SRA,
+    OR,
+    AND,
+    FENCE,
+    ECALL,
+    EBREAK,
+// RV64I Base
+    LWU,
+    LD,
+    SD,
+    SRAI,
+    ADDIW,
+    SLLIW,
+    SRLIW,
+    SRAIW,
+    ADDW,
+    SUBW,
+    SLLW,
+    SRLW,
+    SRAW
+};
+
 enum InstrType {
-    Error = 0,
+    Error = -1,
     Rtype,
     Itype,
     Stype,
@@ -91,7 +148,7 @@ enum InstrType {
 
 class Instruction {
 public:
-    InstrType type;
+    InstrType type = Error;
     std::string mnemonic;
     size_t rd;
     size_t rs1;
@@ -102,20 +159,20 @@ public:
 };
 
 class Disassembler {
-    static Instruction implRtype(uint32_t instr);
+    static Instruction implRtype(uint32_t insword);
 
-    static Instruction implItype(uint32_t instr);
+    static Instruction implItype(uint32_t insword);
 
-    static Instruction implStype(uint32_t instr);
+    static Instruction implStype(uint32_t insword);
 
-    static Instruction implBtype(uint32_t instr);
+    static Instruction implBtype(uint32_t insword);
 
     static Instruction implUtype(uint32_t instr);
 
-    static Instruction implJtype(uint32_t instr);
+    static Instruction implJtype(uint32_t insword);
 
 public:
-    static Instruction disasm(const uint8_t *data, uint64_t addr, size_t maxLen);
+    static Instruction disasm(const uint8_t *data, uint64_t addr);
 };
 
 #endif //BN_RISCV_ARCH_DISASSEMBLER_H
