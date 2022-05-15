@@ -20,7 +20,7 @@ riscvArch::GetInstructionInfo(const uint8_t *data, uint64_t addr, size_t maxLen,
 // Provides the text that BN displays for disassembly view
 bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &len,
                                    std::vector<BinaryNinja::InstructionTextToken> &result) {
-    Instruction res = Disassembler::disasm(data, addr, len, endian);
+    Instruction res = Disassembler::disasm(data, addr, len);
 
     switch (res.type) {
         case Rtype: {

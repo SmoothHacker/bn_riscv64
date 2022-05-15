@@ -2,27 +2,33 @@
 
 Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr, size_t maxLen) {
     uint32_t *inst = (uint32_t *) data;
-    uint8_t opcode = *data & 0b1111111;
+
+    uint8_t opcode = *inst & 0b1111111;
+    //BinaryNinja::Log(DebugLog, "Instr: 0x%x", *inst);
 
     switch (opcode) {
         case 0b0110111: {
             // LUI
             Instruction instruction = implUtype(*inst);
+            instruction.mnemonic = std::string("lui");
             return instruction;
         }
         case 0b0010111: {
             // AUIPC
             Instruction instruction = implUtype(*inst);
+            instruction.mnemonic = std::string("auipc");
             return instruction;
         }
         case 0b1101111: {
             // JAL
             Instruction instruction = implJtype(*inst);
+            instruction.mnemonic = std::string("jal");
             return instruction;
         }
         case 0b1100111: {
             // JALR
             Instruction instruction = implItype(*inst);
+            instruction.mnemonic = std::string("jalr");
             return instruction;
         }
         case 0b1100011: {
@@ -30,22 +36,27 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr, size_t maxL
             Instruction instruction = implBtype(*inst);
 
             switch (instruction.funct3) {
-                case 0b000: {
-                    instruction.mnemonic = std::string("BEQ");
-                }
-                case 0b001: {
-                    instruction.mnemonic = std::string("BNE");
-                }
-                case 0b100: {
-                }
-                case 0b101: {
-                }
-                case 0b110: {
-                }
-                case 0b111: {
-                }
+                case 0b000:
+                    instruction.mnemonic = std::string("beq");
+                    break;
+                case 0b001:
+                    instruction.mnemonic = std::string("bne");
+                    break;
+                case 0b100:
+                    instruction.mnemonic = std::string("blt");
+                    break;
+                case 0b101:
+                    instruction.mnemonic = std::string("bge");
+                    break;
+                case 0b110:
+                    instruction.mnemonic = std::string("bltu");
+                    break;
+                case 0b111:
+                    instruction.mnemonic = std::string("bgeu");
+                    break;
                 default:
-                    printf("Unknown funct3 for Branch instr");
+                    BinaryNinja::Log(ErrorLog, "Unknown funct3 [%d] for Branch instr", instruction.funct3);
+                    break;
             }
 
             return instruction;
@@ -55,18 +66,23 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr, size_t maxL
             Instruction instruction = implItype(*inst);
 
             switch (instruction.funct3) {
-                case 0b000: {
-                }
-                case 0b001: {
-                }
-                case 0b010: {
-                }
-                case 0b100: {
-                }
-                case 0b101: {
-                }
+                case 0b000:
+                    instruction.mnemonic = std::string("lb");
+                    break;
+                case 0b001:
+                    instruction.mnemonic = std::string("lh");
+                    break;
+                case 0b010:
+                    instruction.mnemonic = std::string("lw");
+                    break;
+                case 0b100:
+                    instruction.mnemonic = std::string("lbu");
+                    break;
+                case 0b101:
+                    instruction.mnemonic = std::string("lhu");
+                    break;
                 default:
-                    instruction.mnemonic = std::string("");
+                    BinaryNinja::Log(ErrorLog, "Unknown funct3 [%d] for Load instr", instruction.funct3);
                     break;
             }
 
@@ -75,22 +91,26 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr, size_t maxL
         case 0b0100011: {
             // Store Instructions
             Instruction instruction = implStype(*inst);
+            BinaryNinja::Log(DebugLog, "Store Instr: 0x%x", *inst);
+            BinaryNinja::Log(DebugLog, "Store rs1: %zu, rs2: %zu", instruction.rs1, instruction.rs2);
 
             switch (instruction.funct3) {
-                case 0b000: {
-                }
-                case 0b001: {
-                }
-                case 0b010: {
+                case 0b000:
+                    instruction.mnemonic = std::string("sb");
+                    break;
+                case 0b001:
+                    instruction.mnemonic = std::string("sh");
+                    break;
+                case 0b010:
                     instruction.mnemonic = std::string("sw");
-                }
-                case 0b011: {
+                    break;
+                case 0b011:
                     instruction.mnemonic = std::string("sd");
-                }
+                    break;
                 default:
+                    BinaryNinja::Log(ErrorLog, "Unknown funct3 [%d] for Store instr", instruction.funct3);
                     break;
             }
-
             return instruction;
         }
         case 0b0010011: {
@@ -99,10 +119,29 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr, size_t maxL
 
             switch (instruction.funct3) {
                 case 0b000: {
-                    // ADDI
+                    // Covers pseudo-instruction load immediate - li
                     instruction.mnemonic = std::string("addi");
+                    break;
                 }
+                case 0b010:
+                    instruction.mnemonic = std::string("slti");
+                    break;
+                case 0b011:
+                    instruction.mnemonic = std::string("sltiu");
+                    break;
+                case 0b100:
+                    instruction.mnemonic = std::string("xori");
+                    break;
+                case 0b110:
+                    instruction.mnemonic = std::string("ori");
+                    break;
+                case 0b111:
+                    instruction.mnemonic = std::string("andi");
+                    break;
+                    // TODO implement SLLI, SRLI, SRAI
                 default:
+                    BinaryNinja::Log(ErrorLog, "Unknown funct3 [%d] for Immediate Arithmetic instr",
+                                     instruction.funct3);
                     break;
             }
             return instruction;
@@ -110,23 +149,64 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr, size_t maxL
         case 0b0110011: {
             // Register Arithmetic
             Instruction instruction = implRtype(*inst);
-            instruction.mnemonic = std::string("");
+            switch (instruction.funct3) {
+                case 0b000: {
+                    if (instruction.funct7 == 0)
+                        instruction.mnemonic = std::string("add");
+                    else
+                        instruction.mnemonic = std::string("sub");
+                    break;
+                }
+                case 0b001: {
+                    instruction.mnemonic = std::string("sll");
+                    break;
+                }
+                case 0b010: {
+                    instruction.mnemonic = std::string("slt");
+                    break;
+                }
+                case 0b011: {
+                    instruction.mnemonic = std::string("sltu");
+                    break;
+                }
+                case 0b100: {
+                    instruction.mnemonic = std::string("xor");
+                    break;
+                }
+                case 0b101: {
+                    if (instruction.funct7 == 0)
+                        instruction.mnemonic = std::string("srl");
+                    else
+                        instruction.mnemonic = std::string("sra");
+                    break;
+                }
+                case 0b110: {
+                    instruction.mnemonic = std::string("or");
+                    break;
+                }
+                case 0b111: {
+                    instruction.mnemonic = std::string("and");
+                    break;
+                }
+                default:
+                    BinaryNinja::Log(ErrorLog, "Unknown funct3 [%d] for Register Arithmetic instr", instruction.funct3);
+                    break;
+            }
             return instruction;
         }
         case 0b1110011: {
             // ECALL or EBREAK
             Instruction instruction = implItype(*inst);
-            if (instruction.imm == 1)
+            if (instruction.imm != 0)
                 instruction.mnemonic = std::string("EBREAK");
             else
                 instruction.mnemonic = std::string("ECALL");
             return instruction;
         }
         default:
-            printf("Unimplemented instruction - Opcode: 0x%x", opcode);
+            BinaryNinja::Log(ErrorLog, "Unimplemented instruction - Opcode: 0x%x\n", opcode);
+            return Instruction{.type = Error};
     }
-
-    return {};
 }
 
 Instruction Disassembler::implRtype(uint32_t instr) {
@@ -159,7 +239,7 @@ Instruction Disassembler::implStype(uint32_t instr) {
 
     Instruction instruction;
     instruction.type = Stype;
-    instruction.imm = ((int32_t) imm << 20) >> 20;
+    instruction.imm = (((int32_t) imm) << 20) >> 20;
     instruction.rs2 = (instr >> 20) & 0b11111;
     instruction.rs1 = (instr >> 15) & 0b11111;
     instruction.funct3 = (instr >> 12) & 0b111;
@@ -202,7 +282,7 @@ Instruction Disassembler::implJtype(uint32_t instr) {
 
     Instruction instruction;
     instruction.type = Jtype;
-    instruction.imm = ((int32_t) imm << 11) >> 11;
+    instruction.imm = ((int64_t) imm << 11) >> 11;
     instruction.rd = (instr >> 7) & 0b11111;
     return instruction;
 }
