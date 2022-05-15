@@ -12,15 +12,25 @@ size_t riscvArch::GetAddressSize() const {
 // Responsible for disassembling instructions and feeding BN info for the CFG
 bool
 riscvArch::GetInstructionInfo(const uint8_t *data, uint64_t addr, size_t maxLen, BinaryNinja::InstructionInfo &result) {
-    //Instruction res = Disassembler::disasm(data, addr, maxLen, endian);
-    result.length = 1;
+    Instruction res = Disassembler::disasm(data, addr);
+    if (res.type == InstrType::Error || maxLen < 4) {
+        result.length = 0;
+        return false;
+    }
+
+    result.length = 4;
     return true;
 }
 
 // Provides the text that BN displays for disassembly view
 bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &len,
                                    std::vector<BinaryNinja::InstructionTextToken> &result) {
-    Instruction res = Disassembler::disasm(data, addr, len);
+    BinaryNinja::Log(DebugLog, "addr: 0x%llx, data: 0x%llx, Len: %zu", addr, *data, len);
+    Instruction res = Disassembler::disasm(data, addr);
+    if (res.type == InstrType::Error) {
+        len = 0;
+        return false;
+    }
 
     switch (res.type) {
         case Rtype: {
