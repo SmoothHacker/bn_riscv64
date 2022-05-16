@@ -46,7 +46,7 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
         case 0b1100011: {
             // Branch Instructions
             instr = implBtype(*insdword);
-            instr.imm = instr.imm + addr;
+            instr.imm += addr;
 
             switch (instr.funct3) {
                 case 0b000:
@@ -140,11 +140,10 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
             switch (instr.funct3) {
                 case 0b000: {
                     // Covers pseudo-instr load immediate - li
-                    if (instr.rs1 == Registers::Zero) {
+                    if (instr.rs1 == Registers::Zero)
                         instr.mnemonic = InstrName::LI;
-                    } else {
+                    else
                         instr.mnemonic = InstrName::ADDI;
-                    }
                     break;
                 }
                 case 0b010:

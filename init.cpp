@@ -17,6 +17,12 @@ BINARYNINJAPLUGIN bool CorePluginInit() {
             riscv
     );
 
+    BinaryViewType::RegisterArchitecture(
+            "ELF",
+            EM_RISCV,
+            LittleEndian,
+            riscv
+    );
     return true;
 }
 }
