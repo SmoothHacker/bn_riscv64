@@ -18,6 +18,29 @@ riscvArch::GetInstructionInfo(const uint8_t *data, uint64_t addr, size_t maxLen,
         return false;
     }
 
+    // Check for func return
+    if (res.mnemonic == InstrName::RET)
+        result.AddBranch(BNBranchType::FunctionReturn);
+
+    // Check for branches
+    switch (res.mnemonic) {
+        case InstrName::BEQ:
+        case InstrName::BNE:
+        case InstrName::BLT:
+        case InstrName::BGE:
+        case InstrName::BLTU:
+        case InstrName::BGEU:
+            result.AddBranch(BNBranchType::TrueBranch, res.imm, nullptr, false);
+            result.AddBranch(BNBranchType::FalseBranch, addr + 4, nullptr, false);
+            break;
+        case InstrName::J:
+            result.AddBranch(BNBranchType::UnconditionalBranch, res.imm);
+            break;
+        case InstrName::JAL:
+            result.AddBranch(BNBranchType::CallDestination, res.imm);
+            break;
+    }
+
     result.length = 4;
     return true;
 }
@@ -31,53 +54,98 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
         return false;
     }
 
+#define PADDING_SIZE 5
+    char padding[PADDING_SIZE + 1];
+    memset(padding, 0x20, sizeof(padding));
+    size_t mnemonicLen = strlen(instrNames[res.mnemonic]);
+    if (mnemonicLen < PADDING_SIZE) {
+        padding[PADDING_SIZE - mnemonicLen] = '\0';
+    } else
+        padding[PADDING_SIZE] = '\0';
+
+    result.emplace_back(BNInstructionTextTokenType::InstructionToken, instrNames[res.mnemonic]);
+    result.emplace_back(BNInstructionTextTokenType::TextToken, padding);
+    result.emplace_back(BNInstructionTextTokenType::TextToken, " ");
+
     switch (res.type) {
         case Rtype: {
             char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, %s, %s", instrNames[res.mnemonic],
+            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s, %s, %s",
                               registerNames[res.rd], registerNames[res.rs1], registerNames[res.rs2]);
             if (ret == -1) return false;
             result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
             break;
         }
         case Itype: {
-            char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, %s, %lld", instrNames[res.mnemonic],
-                              registerNames[res.rd], registerNames[res.rs1], res.imm);
-            if(ret == -1) return false;
-            result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
+            switch (res.mnemonic) {
+                case InstrName::RET:
+                    // ret pseudo-instruction
+                    break;
+                case InstrName::LI:
+                    // li pseudo-instruction
+                    result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rd]);
+                    result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
+                    result.emplace_back(BNInstructionTextTokenType::IntegerToken, std::to_string(res.imm));
+                    break;
+                case InstrName::LB:
+                case InstrName::LH:
+                case InstrName::LW:
+                case InstrName::LBU:
+                case InstrName::LHU:
+                case InstrName::LWU:
+                case InstrName::LD:
+                    result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rd]);
+                    result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
+                    result.emplace_back(BNInstructionTextTokenType::BeginMemoryOperandToken, std::to_string(res.imm));
+                    result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, "(");
+                    result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
+                    result.emplace_back(BNInstructionTextTokenType::EndMemoryOperandToken, ")");
+                    break;
+                default:
+                    result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rd]);
+                    result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
+                    result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
+                    result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
+                    result.emplace_back(BNInstructionTextTokenType::IntegerToken, std::to_string(res.imm));
+                    break;
+            }
             break;
         }
         case Stype: {
-            char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, %lld(%s)", instrNames[res.mnemonic],
-                              registerNames[res.rs2], res.imm, registerNames[res.rs1]);
-            if(ret == -1) return false;
-            result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
+            result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs2]);
+            result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
+            result.emplace_back(BNInstructionTextTokenType::BeginMemoryOperandToken, std::to_string(res.imm));
+            result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, "(");
+            result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
+            result.emplace_back(BNInstructionTextTokenType::EndMemoryOperandToken, ")");
             break;
         }
         case Btype: {
-            char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, %s, 0x%llx", instrNames[res.mnemonic],
-                              registerNames[res.rs1], registerNames[res.rs2], res.imm);
-            if(ret == -1) return false;
-            result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
+            char buf[32];
+            sprintf(buf, "0x%llx", res.imm);
+
+            result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
+            result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
+            result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs2]);
+            result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
+            result.emplace_back(BNInstructionTextTokenType::PossibleAddressToken, buf);
             break;
         }
         case Utype: {
             char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, 0x%llx", instrNames[res.mnemonic],
-                              registerNames[res.rd], res.imm);
+            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s, 0x%llx", registerNames[res.rd], res.imm);
             if(ret == -1) return false;
             result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
             break;
         }
         case Jtype: {
-            char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s  %s, 0x%llx", instrNames[res.mnemonic],
-                              registerNames[res.rd], res.imm);
-            if (ret == -1) return false;
-            result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
+            char buf[32];
+            sprintf(buf, "0x%llx", res.imm);
+            if (res.mnemonic != InstrName::J) {
+                result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rd]);
+                result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
+            }
+            result.emplace_back(BNInstructionTextTokenType::PossibleAddressToken, buf, res.imm);
             break;
         }
         case Error:
@@ -89,9 +157,21 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
 
 bool riscvArch::GetInstructionLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len,
                                          BinaryNinja::LowLevelILFunction &il) {
-    il.Unimplemented();
+    //il.AddInstruction(il.Unimplemented());
     len = 4;
     return true;
+}
+
+std::vector<uint32_t> riscvArch::GetFullWidthRegisters() {
+    return GetAllRegisters();
+}
+
+std::vector<uint32_t> riscvArch::GetAllRegisters() {
+    std::vector<uint32_t> result = {0};
+    for (int i = 0; i < 33; ++i) {
+        result.push_back(i);
+    }
+    return result;
 }
 
 BNRegisterInfo riscvArch::GetRegisterInfo(uint32_t reg) {
@@ -194,7 +274,7 @@ size_t riscvArch::GetMaxInstructionLength() const {
 }
 
 std::string riscvArch::GetRegisterName(uint32_t reg) {
-    if (reg < 33)
+    if (reg < 32)
         return {registerNames[reg]};
     else
         return {"unknown reg"};

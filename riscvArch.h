@@ -34,6 +34,10 @@ public:
     BNRegisterInfo GetRegisterInfo(uint32_t reg) override;
 
     uint32_t GetStackPointerRegister() override;
+
+    std::vector<uint32_t> GetFullWidthRegisters() override;
+
+    std::vector<uint32_t> GetAllRegisters() override;
 };
 
 #endif //BN_RISCV_ARCH_RISCVARCH_H
