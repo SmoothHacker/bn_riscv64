@@ -131,7 +131,10 @@ static const char *instrNames[] = {
         "subw",
         "sllw",
         "srlw",
-        "sraw"
+        "sraw",
+        "j",
+        "li",
+        "ret"
 };
 
 enum InstrName {
@@ -189,7 +192,11 @@ enum InstrName {
     SUBW,
     SLLW,
     SRLW,
-    SRAW
+    SRAW,
+    // Pseudo-instructions for RV64I
+    J,
+    LI,
+    RET
 };
 
 enum InstrType {

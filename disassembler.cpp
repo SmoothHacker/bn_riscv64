@@ -25,17 +25,28 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
             // JAL
             instr = implJtype(*insdword);
             instr.mnemonic = InstrName::JAL;
+
+            // Check for pseudo-instruction J
+            if (instr.rd == Registers::Zero) {
+                instr.imm += addr;
+                instr.mnemonic = InstrName::J;
+            }
             return instr;
         }
         case 0b1100111: {
             // JALR
             instr = implItype(*insdword);
-            instr.mnemonic = InstrName::JALR;
+            if (instr.rd == Registers::Zero) {
+                instr.mnemonic = InstrName::RET;
+            } else {
+                instr.mnemonic = InstrName::JALR;
+            }
             return instr;
         }
         case 0b1100011: {
             // Branch Instructions
             instr = implBtype(*insdword);
+            instr.imm = instr.imm + addr;
 
             switch (instr.funct3) {
                 case 0b000:
@@ -129,7 +140,11 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
             switch (instr.funct3) {
                 case 0b000: {
                     // Covers pseudo-instr load immediate - li
-                    instr.mnemonic = InstrName::ADDI;
+                    if (instr.rs1 == Registers::Zero) {
+                        instr.mnemonic = InstrName::LI;
+                    } else {
+                        instr.mnemonic = InstrName::ADDI;
+                    }
                     break;
                 }
                 case 0b010:
