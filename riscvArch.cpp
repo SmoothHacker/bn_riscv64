@@ -1,4 +1,5 @@
 #include "riscvArch.h"
+#include "lifter.h"
 #include "disassembler.h"
 
 BNEndianness riscvArch::GetEndianness() const {
