@@ -37,6 +37,7 @@ riscvArch::GetInstructionInfo(const uint8_t *data, uint64_t addr, size_t maxLen,
             result.AddBranch(BNBranchType::UnconditionalBranch, res.imm);
             break;
         case InstrName::JAL:
+        case InstrName::JALR:
             result.AddBranch(BNBranchType::CallDestination, res.imm);
             break;
     }
@@ -54,7 +55,7 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
         return false;
     }
 
-#define PADDING_SIZE 5
+#define PADDING_SIZE 6
     char padding[PADDING_SIZE + 1];
     memset(padding, 0x20, sizeof(padding));
     size_t mnemonicLen = strlen(instrNames[res.mnemonic]);
@@ -69,11 +70,15 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
 
     switch (res.type) {
         case Rtype: {
-            char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s, %s, %s",
-                              registerNames[res.rd], registerNames[res.rs1], registerNames[res.rs2]);
-            if (ret == -1) return false;
-            result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
+            result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rd]);
+            result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
+            result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
+            result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
+
+            if (res.mnemonic == InstrName::SLLIW)
+                result.emplace_back(BNInstructionTextTokenType::IntegerToken, std::to_string(res.rs2));
+            else
+                result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs2]);
             break;
         }
         case Itype: {
@@ -96,10 +101,11 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
                 case InstrName::LD:
                     result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rd]);
                     result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
-                    result.emplace_back(BNInstructionTextTokenType::BeginMemoryOperandToken, std::to_string(res.imm));
+                case InstrName::JALR:
+                    result.emplace_back(BNInstructionTextTokenType::CodeRelativeAddressToken, std::to_string(res.imm));
                     result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, "(");
                     result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
-                    result.emplace_back(BNInstructionTextTokenType::EndMemoryOperandToken, ")");
+                    result.emplace_back(BNInstructionTextTokenType::TextToken, ")");
                     break;
                 default:
                     result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rd]);
@@ -114,10 +120,10 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
         case Stype: {
             result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs2]);
             result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
-            result.emplace_back(BNInstructionTextTokenType::BeginMemoryOperandToken, std::to_string(res.imm));
+            result.emplace_back(BNInstructionTextTokenType::CodeRelativeAddressToken, std::to_string(res.imm));
             result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, "(");
             result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
-            result.emplace_back(BNInstructionTextTokenType::EndMemoryOperandToken, ")");
+            result.emplace_back(BNInstructionTextTokenType::TextToken, ")");
             break;
         }
         case Btype: {
@@ -132,10 +138,9 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
             break;
         }
         case Utype: {
-            char resToken[128];
-            int ret = sprintf(reinterpret_cast<char *>(resToken), "%s, 0x%llx", registerNames[res.rd], res.imm);
-            if(ret == -1) return false;
-            result.emplace_back(BNInstructionTextTokenType::TextToken, resToken);
+            result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rd]);
+            result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
+            result.emplace_back(BNInstructionTextTokenType::IntegerToken, std::to_string(res.imm));
             break;
         }
         case Jtype: {
@@ -157,7 +162,8 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
 
 bool riscvArch::GetInstructionLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len,
                                          BinaryNinja::LowLevelILFunction &il) {
-    //il.AddInstruction(il.Unimplemented());
+    if (!liftToLowLevelIL(data, addr, len, il))
+        il.AddInstruction(il.Unimplemented());
     len = 4;
     return true;
 }
@@ -258,7 +264,7 @@ BNRegisterInfo riscvArch::RegisterInfo(uint32_t fullWidthReg, size_t size) {
 }
 
 uint32_t riscvArch::GetStackPointerRegister() {
-    return Registers::Pc;
+    return Registers::Sp;
 }
 
 riscvArch::riscvArch(const std::string &name, BNEndianness endian_) : Architecture(name) {
