@@ -161,7 +161,18 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
                 case 0b111:
                     instr.mnemonic = InstrName::ANDI;
                     break;
-                    // TODO implement SLLI, SRLI, SRAI
+                case 0b001:
+                    instr = implRtype(*insdword);
+                    instr.mnemonic = InstrName::SLLI;
+                    break;
+                case 0b101: {
+                    instr = implRtype(*insdword);
+                    if (instr.funct7 == 0)
+                        instr.mnemonic = InstrName::SRLI;
+                    else
+                        instr.mnemonic = InstrName::SRAI;
+                    break;
+                }
                 default:
                     BinaryNinja::Log(ErrorLog, "Unknown funct3 [%d] for Immediate Arithmetic instr",
                                      instr.funct3);
@@ -230,6 +241,32 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
                 instr.mnemonic = InstrName::ECALL;
             return instr;
         }
+        case 0b0011011:
+            instr = implRtype(*insdword);
+            switch (instr.funct3) {
+                case 0b000: {
+                    instr = implItype(*insdword);
+                    instr.mnemonic = InstrName::ADDIW;
+                    break;
+                }
+                case 0b001: {
+                    instr.mnemonic = InstrName::SLLIW;
+                    break;
+                }
+                case 0b101: {
+                    if (instr.funct7 == 0)
+                        instr.mnemonic = InstrName::SRLIW;
+                    else
+                        instr.mnemonic = InstrName::SRAIW;
+                    break;
+                }
+                default:
+                    BinaryNinja::Log(ErrorLog, "Unknown funct3 [%d] for Word Immediate Arithmetic instr", instr.funct3);
+                    instr.type = InstrType::Error;
+                    instr.mnemonic = InstrName::UNSUPPORTED;
+                    break;
+            }
+            return instr;
         default:
             BinaryNinja::Log(ErrorLog, "Unimplemented instr - Opcode: 0x%x\n", opcode);
             instr.type = InstrType::Error;
