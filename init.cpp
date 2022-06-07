@@ -1,4 +1,5 @@
 #include "riscvArch.h"
+#include "riscvCallingConvention.h"
 
 using namespace BinaryNinja;
 extern "C" {
@@ -9,6 +10,10 @@ BINARYNINJAPLUGIN bool CorePluginInit() {
     Architecture::Register(riscv);
 
     // Calling Convention
+    riscvCallingConvention *riscvCallConv = new riscvCallingConvention(riscv);
+    riscv->RegisterCallingConvention(riscvCallConv);
+    riscv->SetDefaultCallingConvention(riscvCallConv);
+
 #define EM_RISCV 243
     BinaryViewType::RegisterArchitecture(
             "ELF",
