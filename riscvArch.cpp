@@ -184,75 +184,41 @@ std::vector<uint32_t> riscvArch::GetAllRegisters() {
 BNRegisterInfo riscvArch::GetRegisterInfo(uint32_t reg) {
     switch (reg) {
         case Registers::Zero:
-            return RegisterInfo(Registers::Zero, 8);
         case Registers::Ra:
-            return RegisterInfo(Registers::Ra, 8);
         case Registers::Sp:
-            return RegisterInfo(Registers::Sp, 8);
         case Registers::Gp:
-            return RegisterInfo(Registers::Gp, 8);
         case Registers::Tp:
-            return RegisterInfo(Registers::Tp, 8);
         case Registers::T0:
-            return RegisterInfo(Registers::T0, 8);
         case Registers::T1:
-            return RegisterInfo(Registers::T1, 8);
         case Registers::T2:
-            return RegisterInfo(Registers::T2, 8);
         case Registers::S0:
-            return RegisterInfo(Registers::S0, 8);
         case Registers::S1:
-            return RegisterInfo(Registers::S1, 8);
         case Registers::A0:
-            return RegisterInfo(Registers::A0, 8);
         case Registers::A1:
-            return RegisterInfo(Registers::A1, 8);
         case Registers::A2:
-            return RegisterInfo(Registers::A2, 8);
         case Registers::A3:
-            return RegisterInfo(Registers::A3, 8);
         case Registers::A4:
-            return RegisterInfo(Registers::A4, 8);
         case Registers::A5:
-            return RegisterInfo(Registers::A5, 8);
         case Registers::A6:
-            return RegisterInfo(Registers::A6, 8);
         case Registers::A7:
-            return RegisterInfo(Registers::A7, 8);
         case Registers::S2:
-            return RegisterInfo(Registers::S2, 8);
         case Registers::S3:
-            return RegisterInfo(Registers::S3, 8);
         case Registers::S4:
-            return RegisterInfo(Registers::S4, 8);
         case Registers::S5:
-            return RegisterInfo(Registers::S5, 8);
         case Registers::S6:
-            return RegisterInfo(Registers::S6, 8);
         case Registers::S7:
-            return RegisterInfo(Registers::S7, 8);
         case Registers::S8:
-            return RegisterInfo(Registers::S8, 8);
         case Registers::S9:
-            return RegisterInfo(Registers::S9, 8);
         case Registers::S10:
-            return RegisterInfo(Registers::S10, 8);
         case Registers::S11:
-            return RegisterInfo(Registers::S11, 8);
         case Registers::T3:
-            return RegisterInfo(Registers::T3, 8);
         case Registers::T4:
-            return RegisterInfo(Registers::T4, 8);
         case Registers::T5:
-            return RegisterInfo(Registers::T5, 8);
         case Registers::T6:
-            return RegisterInfo(Registers::T6, 8);
         case Registers::Pc:
-            return RegisterInfo(Registers::Pc, 8);
-        default:
-            BinaryNinja::Log(ErrorLog, "Unknown RISC-V Register: %d", reg);
-            return RegisterInfo(0, 0);
+            return RegisterInfo(reg, 8);
     }
+    return RegisterInfo(0, 0);
 }
 
 BNRegisterInfo riscvArch::RegisterInfo(uint32_t fullWidthReg, size_t size) {

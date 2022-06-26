@@ -10,7 +10,7 @@ BINARYNINJAPLUGIN bool CorePluginInit() {
     Architecture::Register(riscv);
 
     // Calling Convention
-    riscvCallingConvention *riscvCallConv = new riscvCallingConvention(riscv);
+    auto *riscvCallConv = new riscvCallingConvention(riscv);
     riscv->RegisterCallingConvention(riscvCallConv);
     riscv->SetDefaultCallingConvention(riscvCallConv);
 
