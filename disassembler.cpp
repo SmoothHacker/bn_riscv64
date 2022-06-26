@@ -9,20 +9,17 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
     };
 
     switch (opcode) {
-        case 0b0110111: {
-            // LUI
+        case 0b0110111: { // LUI
             instr = implUtype(*insdword);
             instr.mnemonic = InstrName::LUI;
             return instr;
         }
-        case 0b0010111: {
-            // AUIPC
+        case 0b0010111: { // AUIPC
             instr = implUtype(*insdword);
             instr.mnemonic = InstrName::AUIPC;
             return instr;
         }
-        case 0b1101111: {
-            // JAL
+        case 0b1101111: { // JAL
             instr = implJtype(*insdword);
             instr.mnemonic = InstrName::JAL;
 
@@ -33,8 +30,7 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
             }
             return instr;
         }
-        case 0b1100111: {
-            // JALR
+        case 0b1100111: { // JALR
             instr = implItype(*insdword);
             if (instr.rd == Registers::Zero) {
                 instr.mnemonic = InstrName::RET;
@@ -43,8 +39,7 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
             }
             return instr;
         }
-        case 0b1100011: {
-            // Branch Instructions
+        case 0b1100011: { // Branch Instructions
             instr = implBtype(*insdword);
             instr.imm += addr;
 
@@ -76,8 +71,7 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
 
             return instr;
         }
-        case 0b0000011: {
-            // Load Instructions
+        case 0b0000011: { // Load Instructions
             instr = implItype(*insdword);
 
             switch (instr.funct3) {
@@ -108,8 +102,7 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
 
             return instr;
         }
-        case 0b0100011: {
-            // Store Instructions
+        case 0b0100011: { // Store Instructions
             instr = implStype(*insdword);
 
             switch (instr.funct3) {
@@ -133,13 +126,11 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
             }
             return instr;
         }
-        case 0b0010011: {
-            // Immediate Arithmetic
+        case 0b0010011: { // Immediate Arithmetic
             instr = implItype(*insdword);
 
             switch (instr.funct3) {
-                case 0b000: {
-                    // Covers pseudo-instr load immediate - li
+                case 0b000: { // Covers pseudo-instr load immediate - li
                     if (instr.rs1 == Registers::Zero)
                         instr.mnemonic = InstrName::LI;
                     else
@@ -182,8 +173,7 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
             }
             return instr;
         }
-        case 0b0110011: {
-            // Register Arithmetic
+        case 0b0110011: { // Register Arithmetic
             instr = implRtype(*insdword);
             switch (instr.funct3) {
                 case 0b000: {
@@ -193,22 +183,18 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
                         instr.mnemonic = InstrName::SUB;
                     break;
                 }
-                case 0b001: {
+                case 0b001:
                     instr.mnemonic = InstrName::SLL;
                     break;
-                }
-                case 0b010: {
+                case 0b010:
                     instr.mnemonic = InstrName::SLT;
                     break;
-                }
-                case 0b011: {
+                case 0b011:
                     instr.mnemonic = InstrName::SLTU;
                     break;
-                }
-                case 0b100: {
+                case 0b100:
                     instr.mnemonic = InstrName::XOR;
                     break;
-                }
                 case 0b101: {
                     if (instr.funct7 == 0)
                         instr.mnemonic = InstrName::SRL;
@@ -216,14 +202,12 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
                         instr.mnemonic = InstrName::SRA;
                     break;
                 }
-                case 0b110: {
+                case 0b110:
                     instr.mnemonic = InstrName::OR;
                     break;
-                }
-                case 0b111: {
+                case 0b111:
                     instr.mnemonic = InstrName::AND;
                     break;
-                }
                 default:
                     BinaryNinja::Log(ErrorLog, "Unknown funct3 [%d] for Register Arithmetic instr", instr.funct3);
                     instr.type = InstrType::Error;
@@ -232,8 +216,7 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
             }
             return instr;
         }
-        case 0b1110011: {
-            // ECALL or EBREAK
+        case 0b1110011: { // ECALL or EBREAK
             instr = implItype(*insdword);
             if (instr.imm != 0)
                 instr.mnemonic = InstrName::EBREAK;
@@ -249,10 +232,9 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
                     instr.mnemonic = InstrName::ADDIW;
                     break;
                 }
-                case 0b001: {
+                case 0b001:
                     instr.mnemonic = InstrName::SLLIW;
                     break;
-                }
                 case 0b101: {
                     if (instr.funct7 == 0)
                         instr.mnemonic = InstrName::SRLIW;
