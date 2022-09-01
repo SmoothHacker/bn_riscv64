@@ -7,7 +7,7 @@ class riscvArch : public BinaryNinja::Architecture {
     size_t addressSize = 32;
     BNEndianness endian;
 
-    static BNRegisterInfo RegisterInfo(uint32_t fullWidthReg, size_t size);
+    static BNRegisterInfo RegisterInfo(uint32_t fullWidthReg);
 
 public:
     riscvArch(const std::string &name, BNEndianness endian_);
@@ -38,6 +38,8 @@ public:
     std::vector<uint32_t> GetFullWidthRegisters() override;
 
     std::vector<uint32_t> GetAllRegisters() override;
+
+    std::string GetRegisterStackName(uint32_t regStack) override;
 };
 
 #endif //BN_RISCV_ARCH_RISCVARCH_H

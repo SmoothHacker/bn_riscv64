@@ -1,17 +1,18 @@
 #include "riscvCallingConvention.h"
+#include "lifter.h"
 
 std::vector<uint32_t> riscvCallingConvention::GetCalleeSavedRegisters() {
-    std::vector<uint32_t> regs = {2, 8, 9, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27};
+    std::vector<uint32_t> regs = {sp, s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11};
     return regs;
 }
 
 std::vector<uint32_t> riscvCallingConvention::GetCallerSavedRegisters() {
-    std::vector<uint32_t> regs = {1, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, 28, 29, 30, 31};
+    std::vector<uint32_t> regs = {Zero, t0, t1, t2, a0, a1, a2, a3, a4, a5, a6, a7, t3, t4, t5, t6};
     return regs;
 }
 
 std::vector<uint32_t> riscvCallingConvention::GetIntegerArgumentRegisters() {
-    std::vector<uint32_t> regs = {10, 11, 12, 13, 14, 15, 16, 17};
+    std::vector<uint32_t> regs = {a0, a1, a2, a3, a4, a5, a6, a7};
     return regs;
 }
 
@@ -24,9 +25,9 @@ bool riscvCallingConvention::IsStackReservedForArgumentRegisters() {
 }
 
 uint32_t riscvCallingConvention::GetIntegerReturnValueRegister() {
-    return 1;
+    return a0;
 }
 
 uint32_t riscvCallingConvention::GetGlobalPointerRegister() {
-    return 3;
+    return gp;
 }
