@@ -41,6 +41,8 @@ riscvArch::GetInstructionInfo(const uint8_t *data, uint64_t addr, size_t maxLen,
         case InstrName::JALR:
             result.AddBranch(BNBranchType::CallDestination, res.imm);
             break;
+        default:
+            break;
     }
 
     result.length = 4;
@@ -77,7 +79,7 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
             result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
 
             if (res.mnemonic == InstrName::SLLIW)
-                result.emplace_back(BNInstructionTextTokenType::IntegerToken, std::to_string(res.rs2));
+                result.emplace_back(BNInstructionTextTokenType::IntegerToken, std::to_string(res.funct3));
             else
                 result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs2]);
             break;
@@ -129,7 +131,7 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
         }
         case Btype: {
             char buf[32];
-            sprintf(buf, "0x%llx", res.imm);
+            sprintf(buf, "0x%x", res.imm);
 
             result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
             result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
@@ -146,7 +148,7 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
         }
         case Jtype: {
             char buf[32];
-            sprintf(buf, "0x%llx", res.imm);
+            sprintf(buf, "0x%x", res.imm);
             if (res.mnemonic != InstrName::J) {
                 result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rd]);
                 result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
@@ -163,8 +165,7 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
 
 bool riscvArch::GetInstructionLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len,
                                          BinaryNinja::LowLevelILFunction &il) {
-    if (!liftToLowLevelIL(data, addr, len, il))
-        il.AddInstruction(il.Unimplemented());
+    liftToLowLevelIL(data, addr, len, il);
     len = 4;
     return true;
 }
@@ -174,64 +175,69 @@ std::vector<uint32_t> riscvArch::GetFullWidthRegisters() {
 }
 
 std::vector<uint32_t> riscvArch::GetAllRegisters() {
-    std::vector<uint32_t> result = {0};
+    std::vector<uint32_t> result;
     for (int i = 0; i < 33; ++i) {
         result.push_back(i);
     }
     return result;
 }
 
+std::string riscvArch::GetRegisterStackName(uint32_t regStack) {
+    return registerNames[Registers::sp];
+}
+
 BNRegisterInfo riscvArch::GetRegisterInfo(uint32_t reg) {
     switch (reg) {
         case Registers::Zero:
-        case Registers::Ra:
-        case Registers::Sp:
-        case Registers::Gp:
-        case Registers::Tp:
-        case Registers::T0:
-        case Registers::T1:
-        case Registers::T2:
-        case Registers::S0:
-        case Registers::S1:
-        case Registers::A0:
-        case Registers::A1:
-        case Registers::A2:
-        case Registers::A3:
-        case Registers::A4:
-        case Registers::A5:
-        case Registers::A6:
-        case Registers::A7:
-        case Registers::S2:
-        case Registers::S3:
-        case Registers::S4:
-        case Registers::S5:
-        case Registers::S6:
-        case Registers::S7:
-        case Registers::S8:
-        case Registers::S9:
-        case Registers::S10:
-        case Registers::S11:
-        case Registers::T3:
-        case Registers::T4:
-        case Registers::T5:
-        case Registers::T6:
-        case Registers::Pc:
-            return RegisterInfo(reg, 8);
+        case Registers::ra:
+        case Registers::sp:
+        case Registers::gp:
+        case Registers::tp:
+        case Registers::t0:
+        case Registers::t1:
+        case Registers::t2:
+        case Registers::s0:
+        case Registers::s1:
+        case Registers::a0:
+        case Registers::a1:
+        case Registers::a2:
+        case Registers::a3:
+        case Registers::a4:
+        case Registers::a5:
+        case Registers::a6:
+        case Registers::a7:
+        case Registers::s2:
+        case Registers::s3:
+        case Registers::s4:
+        case Registers::s5:
+        case Registers::s6:
+        case Registers::s7:
+        case Registers::s8:
+        case Registers::s9:
+        case Registers::s10:
+        case Registers::s11:
+        case Registers::t3:
+        case Registers::t4:
+        case Registers::t5:
+        case Registers::t6:
+        case Registers::pc:
+            return RegisterInfo(reg);
+        default:
+            return RegisterInfo(0);
     }
-    return RegisterInfo(0, 0);
 }
 
-BNRegisterInfo riscvArch::RegisterInfo(uint32_t fullWidthReg, size_t size) {
-    BNRegisterInfo result{};
+BNRegisterInfo riscvArch::RegisterInfo(uint32_t fullWidthReg) {
+    BNRegisterInfo result;
     result.fullWidthRegister = fullWidthReg;
     result.offset = 0;
-    result.size = size;
-    result.extend = NoExtend;
+    result.size = 8;
+    result.extend = SignExtendToFullWidth;
     return result;
 }
 
 uint32_t riscvArch::GetStackPointerRegister() {
-    return Registers::Sp;
+    return Registers::sp;
 }
 
 riscvArch::riscvArch(const std::string &name, BNEndianness endian_) : Architecture(name) {
@@ -247,8 +253,11 @@ size_t riscvArch::GetMaxInstructionLength() const {
 }
 
 std::string riscvArch::GetRegisterName(uint32_t reg) {
-    if (reg < 32)
+    if (reg < 33)
         return {registerNames[reg]};
-    else
-        return {"unknown reg"};
+    else {
+        std::string unReg("x");
+        unReg += std::to_string(reg);
+        return unReg;
+    }
 }
