@@ -8,39 +8,51 @@
 #include <binaryninjaapi.h>
 
 enum Registers {
-    Zero = 0,
-    Ra,
-    Sp,
-    Gp,
-    Tp,
-    T0,
-    T1,
-    T2,
-    S0,
-    S1,
-    A0,
-    A1,
-    A2,
-    A3,
-    A4,
-    A5,
-    A6,
-    A7,
-    S2,
-    S3,
-    S4,
-    S5,
-    S6,
-    S7,
-    S8,
-    S9,
-    S10,
-    S11,
-    T3,
-    T4,
-    T5,
-    T6,
-    Pc,
+    Zero,
+    // x1 - return address (caller saved)
+    ra,
+    // x2 - stack pointer (callee saved)
+    sp,
+    // x3 - global pointer
+    gp,
+    // x4 - threat pointer
+    tp,
+    // x5-7 - temporaries (caller saved)
+    t0,
+    t1,
+    t2,
+    // x8 - saved register / frame pointer (caller saved)
+    s0,
+    // x9 - saved register
+    s1,
+    // x10-x11 - first function argument and return value (caller saved)
+    a0,
+    a1,
+    // x12-17 - function arguments (caller saved)
+    a2,
+    a3,
+    a4,
+    a5,
+    a6,
+    a7,
+    // x18-27 - saved registers (caller saved)
+    s2,
+    s3,
+    s4,
+    s5,
+    s6,
+    s7,
+    s8,
+    s9,
+    s10,
+    s11,
+    // x28-31 - temporaries
+    t3,
+    t4,
+    t5,
+    t6,
+    // pc (caller saved)
+    pc,
 };
 
 static const char *registerNames[] = {
@@ -218,7 +230,7 @@ public:
     size_t rs2 = 0;
     uint32_t funct7 = 0;
     uint32_t funct3 = 0;
-    int64_t imm = 0;
+    int32_t imm = 0;
 };
 
 class Disassembler {
