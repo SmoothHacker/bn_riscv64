@@ -31,7 +31,7 @@ riscvArch::GetInstructionInfo(const uint8_t *data, uint64_t addr, size_t maxLen,
         case InstrName::BGE:
         case InstrName::BLTU:
         case InstrName::BGEU:
-            result.AddBranch(BNBranchType::TrueBranch, res.imm, nullptr, false);
+            result.AddBranch(BNBranchType::TrueBranch, res.imm + addr, nullptr, false);
             result.AddBranch(BNBranchType::FalseBranch, addr + 4, nullptr, false);
             break;
         case InstrName::J:

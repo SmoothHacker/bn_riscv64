@@ -1,21 +1,37 @@
 #include "lifter.h"
 
 ExprId cond_branch(BinaryNinja::LowLevelILFunction &il, Instruction &inst, ExprId condition) {
-    ExprId dest;
-    if (inst.imm == 0)
-        dest = il.Const(8, inst.imm);
-    else
-        dest = il.Register(8, inst.rs1);
-    BNLowLevelILLabel *trueLabel = il.GetLabelForAddress(il.GetArchitecture(), dest);
-    auto falseLabel = il.GetLabelForAddress(il.GetArchitecture(), il.Add(8, il.GetCurrentAddress(), 4));
+    uint64_t dest = inst.imm + il.GetCurrentAddress();
+    uint64_t nextInst = il.GetCurrentAddress() + 4;
+    auto trueLabel = il.GetLabelForAddress(il.GetArchitecture(), dest);
+    auto falseLabel = il.GetLabelForAddress(il.GetArchitecture(), nextInst);
 
-    return il.AddInstruction(il.If(condition, reinterpret_cast<BNLowLevelILLabel &>(trueLabel),
-                                   reinterpret_cast<BNLowLevelILLabel &>(falseLabel)));
+    if (trueLabel && falseLabel)
+        return il.If(condition, *trueLabel, *falseLabel);
+
+    LowLevelILLabel trueCode, falseCode;
+    if (trueLabel) {
+        il.AddInstruction(il.If(condition, *trueLabel, falseCode));
+        il.MarkLabel(falseCode);
+        return il.Jump(il.ConstPointer(8, nextInst));
+    }
+
+    if (falseLabel) {
+        il.AddInstruction(il.If(condition, trueCode, *falseLabel));
+        il.MarkLabel(falseCode);
+        return il.Jump(il.ConstPointer(8, dest));
+    }
+
+    il.AddInstruction(il.If(condition, trueCode, falseCode));
+    il.MarkLabel(trueCode);
+    il.AddInstruction(il.Jump(il.ConstPointer(8, dest)));
+    il.MarkLabel(falseCode);
+    return il.Jump(il.ConstPointer(8, nextInst));
 }
 
 ExprId store_helper(BinaryNinja::LowLevelILFunction &il, Instruction &inst, uint64_t size) {
     ExprId addr = il.Add(8, il.Register(8, inst.rs1), il.Const(8, inst.imm));
-    ExprId val = il.Register(8, inst.rs2);
+    ExprId val = il.Register(size, inst.rs2);
 
     if (inst.mnemonic == SD)
         return il.Store(size, addr, il.LowPart(size, val));
@@ -135,8 +151,12 @@ bool liftToLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len, BinaryNin
         case SLL:
             break;
         case SLT:
+            expr = il.SetRegister(8, inst.rd,
+                                  il.CompareSignedLessThan(8, il.Register(8, inst.rs1), il.Const(8, inst.rs2)));
             break;
         case SLTU:
+            expr = il.SetRegister(8, inst.rd,
+                                  il.CompareUnsignedLessThan(8, il.Register(8, inst.rs1), il.Const(8, inst.rs2)));
             break;
         case XOR:
             expr = il.SetRegister(8, inst.rd, il.Xor(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
