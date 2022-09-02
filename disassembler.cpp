@@ -41,7 +41,7 @@ Instruction Disassembler::disasm(const uint8_t *data, uint64_t addr) {
         }
         case 0b1100011: { // Branch Instructions
             instr = implBtype(*insdword);
-            instr.imm += addr;
+            //instr.imm += addr;
 
             switch (instr.funct3) {
                 case 0b000:
@@ -294,7 +294,7 @@ Instruction Disassembler::implStype(uint32_t insdword) {
     Instruction instr;
     instr.type = Stype;
     struct {
-        int64_t x: 12;
+        int32_t x: 12;
     } s;
     instr.imm = s.x = ((imm) >> 20);
     instr.rs2 = (insdword >> 20) & 0b11111;
@@ -312,12 +312,8 @@ Instruction Disassembler::implBtype(uint32_t insdword) {
     uint32_t imm = (imm12 << 12) | (imm11 << 11) | (imm105 << 5) | (imm41 << 1);
 
     Instruction instr;
-
     instr.type = Btype;
-    struct {
-        int64_t x: 13;
-    } s;
-    instr.imm = s.x = ((imm << 19) >> 19);
+    instr.imm = (((uint32_t) imm) << 19) >> 19;
     instr.rs2 = (insdword >> 20) & 0b11111;
     instr.rs1 = (insdword >> 15) & 0b11111;
     instr.funct3 = (insdword >> 12) & 0b111;
