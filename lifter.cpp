@@ -47,7 +47,7 @@ ExprId load_helper(BinaryNinja::LowLevelILFunction &il, Instruction &inst, uint6
         return il.SetRegister(8, inst.rd, il.SignExtend(8, il.Load(size, addr)));
 }
 
-bool liftToLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len, BinaryNinja::LowLevelILFunction &il) {
+void liftToLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len, BinaryNinja::LowLevelILFunction &il) {
     Instruction inst = Disassembler::disasm(data, addr);
     ExprId expr = il.Unimplemented();
     switch (inst.mnemonic) {
@@ -61,25 +61,50 @@ bool liftToLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len, BinaryNin
             expr = il.SetRegister(8, inst.rd, il.Sub(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
             break;
         case AUIPC:
-            expr = il.SetRegister(8, inst.rd, il.Add(8, il.Const(8, inst.imm << 12), il.Const(8, addr)));
+            expr = il.SetRegister(8, inst.rd, il.Const(8, inst.imm + addr));
             break;
         case JAL:
             break;
         case JALR:
+            if (inst.rd != 0)
+                // Link
+                il.AddInstruction(il.SetRegister(8, inst.rd, il.Add(8, inst.rs1, il.Const(8, inst.imm + addr))));
+
+            // Jump
+            if (inst.rs1 == 0)
+                expr = il.Jump(il.Add(8, il.Const(8, 0), il.Const(8, inst.imm)));
+            else
+                expr = il.Jump(il.Add(8, il.Register(8, inst.rs1), il.Const(8, inst.imm)));
             break;
         case BEQ:
-            expr = cond_branch(il, inst, il.CompareEqual(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
+            if (inst.rs2 == Registers::Zero)
+                expr = cond_branch(il, inst, il.CompareEqual(8, il.Register(8, inst.rs1), il.Const(8, 0)));
+            else
+                expr = cond_branch(il, inst, il.CompareEqual(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
             break;
         case BNE:
-            expr = cond_branch(il, inst, il.CompareNotEqual(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
+            if (inst.rs2 == Registers::Zero)
+                expr = cond_branch(il, inst, il.CompareNotEqual(8, il.Register(8, inst.rs1), il.Const(8, 0)));
+            else
+                expr = cond_branch(il, inst, il.CompareNotEqual(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
             break;
         case BLT:
-            expr = cond_branch(il, inst,
-                               il.CompareSignedLessThan(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
+            if (inst.rs2 == Registers::Zero)
+                expr = cond_branch(il, inst, il.CompareSignedLessThan(8, il.Register(8, inst.rs1), il.Const(8, 0)));
+            else if (inst.rs1 == Registers::Zero)
+                expr = cond_branch(il, inst, il.CompareSignedLessThan(8, il.Const(8, 0), il.Register(8, inst.rs2)));
+            else
+                expr = cond_branch(il, inst,
+                                   il.CompareSignedLessThan(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
             break;
         case BGE:
-            expr = cond_branch(il, inst,
-                               il.CompareSignedGreaterEqual(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
+            if (inst.rs2 == Registers::Zero)
+                expr = cond_branch(il, inst, il.CompareSignedGreaterEqual(8, il.Register(8, inst.rs1), il.Const(8, 0)));
+            else if (inst.rs1 == Registers::Zero)
+                expr = cond_branch(il, inst, il.CompareSignedGreaterEqual(8, il.Const(8, 0), il.Register(8, inst.rs2)));
+            else
+                expr = cond_branch(il, inst,
+                                   il.CompareSignedGreaterEqual(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
             break;
         case BLTU:
             expr = cond_branch(il, inst,
@@ -217,6 +242,5 @@ bool liftToLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len, BinaryNin
             break;
     }
     il.AddInstruction(expr);
-    return true;
 }
 
