@@ -39,7 +39,10 @@ riscvArch::GetInstructionInfo(const uint8_t *data, uint64_t addr, size_t maxLen,
             break;
         case InstrName::JAL:
         case InstrName::JALR:
-            result.AddBranch(BNBranchType::CallDestination, res.imm);
+            if (res.rd == 1 && res.imm == 0)
+                result.AddBranch(BNBranchType::FunctionReturn, res.imm + addr);
+            else
+                result.AddBranch(BNBranchType::CallDestination);
             break;
         default:
             break;
@@ -228,7 +231,7 @@ BNRegisterInfo riscvArch::GetRegisterInfo(uint32_t reg) {
 }
 
 BNRegisterInfo riscvArch::RegisterInfo(uint32_t fullWidthReg) {
-    BNRegisterInfo result;
+    BNRegisterInfo result{};
     result.fullWidthRegister = fullWidthReg;
     result.offset = 0;
     result.size = 8;
