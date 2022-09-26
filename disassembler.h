@@ -230,7 +230,7 @@ public:
     size_t rs2 = 0;
     uint32_t funct7 = 0;
     uint32_t funct3 = 0;
-    int32_t imm = 0;
+    int64_t imm = 0;
 };
 
 class Disassembler {

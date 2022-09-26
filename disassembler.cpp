@@ -289,14 +289,10 @@ Instruction Disassembler::implItype(uint32_t insdword) {
 Instruction Disassembler::implStype(uint32_t insdword) {
     uint32_t imm115 = (insdword >> 25) & 0b1111111;
     uint32_t imm40 = (insdword >> 7) & 0b11111;
-    uint32_t imm = (imm115 << 5) | imm40;
 
     Instruction instr;
     instr.type = Stype;
-    struct {
-        int32_t x: 12;
-    } s;
-    instr.imm = s.x = ((imm) >> 20);
+    instr.imm = (((int64_t) insdword << 32) >> 57) << 5 | (insdword << 52) >> 59;
     instr.rs2 = (insdword >> 20) & 0b11111;
     instr.rs1 = (insdword >> 15) & 0b11111;
     instr.funct3 = (insdword >> 12) & 0b111;
