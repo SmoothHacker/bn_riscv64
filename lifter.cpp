@@ -65,16 +65,19 @@ void liftToLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len, BinaryNin
             break;
         case JAL:
             break;
-        case JALR:
-            if (inst.rd != 0)
-                // Link
-                il.AddInstruction(il.SetRegister(8, inst.rd, il.Add(8, inst.rs1, il.Const(8, inst.imm + addr))));
-
-            // Jump
-            if (inst.rs1 == 0)
-                expr = il.Jump(il.Add(8, il.Const(8, 0), il.Const(8, inst.imm)));
+        case JALR: {
+            ExprId rs1;
+            if (inst.rs1 != 0)
+                rs1 = il.Register(8, inst.rs1);
             else
-                expr = il.Jump(il.Add(8, il.Register(8, inst.rs1), il.Const(8, inst.imm)));
+                rs1 = il.Const(8, 0);
+
+            ExprId target = il.Add(8, rs1, il.Const(8, inst.imm));
+            if (inst.rd != 0) // Link
+                il.AddInstruction(il.SetRegister(8, inst.rd, il.Add(8, rs1, il.Const(8, -inst.imm + addr))));
+
+            expr = il.Jump(target);
+        }
             break;
         case BEQ:
             if (inst.rs2 == Registers::Zero)
@@ -199,8 +202,10 @@ void liftToLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len, BinaryNin
         case FENCE:
             break;
         case ECALL:
+            expr = il.SystemCall();
             break;
         case EBREAK:
+            expr = il.Breakpoint();
             break;
         case SRAI:
             break;
