@@ -12,7 +12,7 @@ ExprId cond_branch(BinaryNinja::LowLevelILFunction &il, Instruction &inst, ExprI
     LowLevelILLabel trueCode, falseCode;
     if (trueLabel) {
         il.AddInstruction(il.If(condition, *trueLabel, falseCode));
-        il.MarkLabel(falseCode);
+        il.MarkLabel(trueCode);
         return il.Jump(il.ConstPointer(8, nextInst));
     }
 
@@ -74,9 +74,9 @@ void liftToLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len, BinaryNin
 
             ExprId target = il.Add(8, rs1, il.Const(8, inst.imm));
             if (inst.rd != 0) // Link
-                il.AddInstruction(il.SetRegister(8, inst.rd, il.Add(8, rs1, il.Const(8, -inst.imm + addr))));
+                //il.AddInstruction(il.SetRegister(8, inst.rd, il.Add(8, rs1, il.Const(8, -inst.imm + addr))));
 
-            expr = il.Jump(target);
+            expr = il.Call(target);
         }
             break;
         case BEQ:
@@ -111,11 +111,11 @@ void liftToLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len, BinaryNin
             break;
         case BLTU:
             expr = cond_branch(il, inst,
-                               il.CompareSignedLessThan(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
+                               il.CompareUnsignedLessThan(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
             break;
         case BGEU:
             expr = cond_branch(il, inst,
-                               il.CompareSignedGreaterEqual(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
+                               il.CompareUnsignedGreaterEqual(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
             break;
         case LB:
             expr = load_helper(il, inst, 1, false);
@@ -208,15 +208,17 @@ void liftToLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len, BinaryNin
             expr = il.Breakpoint();
             break;
         case SRAI:
+            expr = il.SetRegister(8, inst.rd, il.ArithShiftRight(8, il.Register(8, inst.rs1), il.Const(8, inst.funct3)));
             break;
         case ADDIW:
+            expr = il.SetRegister(8, inst.rd, il.Add(8, il.Register(8, inst.rs1), il.Const(8, inst.imm)));
             break;
         case SLLIW:
             expr = il.SetRegister(4, inst.rd, il.ShiftLeft(4, il.Register(4, inst.rs1), il.Const(4, inst.funct3)));
             break;
         case SRLIW:
             expr = il.SetRegister(4, inst.rd,
-                                  il.ArithShiftRight(4, il.Register(4, inst.rs1), il.Const(4, inst.funct3)));
+                                  il.LogicalShiftRight(4, il.Register(4, inst.rs1), il.Const(4, inst.funct3)));
             break;
         case SRAIW:
             break;
