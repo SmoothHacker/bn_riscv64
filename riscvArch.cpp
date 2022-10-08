@@ -264,3 +264,7 @@ std::string riscvArch::GetRegisterName(uint32_t reg) {
         return unReg;
     }
 }
+
+uint32_t riscvArch::GetLinkRegister() {
+    return Registers::ra;
+}

@@ -40,6 +40,8 @@ public:
     std::vector<uint32_t> GetAllRegisters() override;
 
     std::string GetRegisterStackName(uint32_t regStack) override;
+
+    uint32_t GetLinkRegister() override;
 };
 
 #endif //BN_RISCV_ARCH_RISCVARCH_H
