@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <string>
 
-#include <binaryninjaapi.h>
+#include "binaryninjaapi.h"
 
 enum Registers {
     Zero,

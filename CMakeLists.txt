@@ -8,7 +8,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_FLAGS -g)
 set(SOURCE
-        init.cpp riscvCallingConvention.cpp riscvCallingConvention.h lifter.cpp lifter.h disassembler.cpp disassembler.h riscvArch.cpp riscvArch.h)
+        src/init.cpp
+        src/riscvCallingConvention.cpp
+        src/riscvCallingConvention.h
+        src/lifter.cpp
+        src/lifter.h
+        src/disassembler.cpp
+        src/disassembler.h
+        src/riscvArch.cpp
+        src/riscvArch.h)
 
 add_library(bn_riscv_arch SHARED ${SOURCE})
 target_link_libraries(bn_riscv_arch binaryninjaapi)
