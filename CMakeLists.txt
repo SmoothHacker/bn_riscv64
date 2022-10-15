@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 project (bn_riscv_arch)
 
 set(HEADLESS ON CACHE BOOL "Skip building UI functionality")
-add_subdirectory(vendor/binaryninja-api)
+add_subdirectory(vendor/api)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Release)
