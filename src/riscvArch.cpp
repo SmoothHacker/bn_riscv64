@@ -1,4 +1,5 @@
 #include "riscvArch.h"
+#include "disassembler.h"
 #include "lifter.h"
 #include "disassembler.h"
 
@@ -239,9 +240,7 @@ BNRegisterInfo riscvArch::RegisterInfo(uint32_t fullWidthReg) {
     return result;
 }
 
-uint32_t riscvArch::GetStackPointerRegister() {
-    return Registers::sp;
-}
+uint32_t riscvArch::GetStackPointerRegister() { return Registers::sp; }
 
 riscvArch::riscvArch(const std::string &name, BNEndianness endian_) : Architecture(name) {
     endian = endian_;
@@ -265,6 +264,4 @@ std::string riscvArch::GetRegisterName(uint32_t reg) {
     }
 }
 
-uint32_t riscvArch::GetLinkRegister() {
-    return Registers::ra;
-}
+uint32_t riscvArch::GetLinkRegister() { return Registers::ra; }
