@@ -5,8 +5,6 @@ set(HEADLESS ON CACHE BOOL "Skip building UI functionality")
 add_subdirectory(vendor/api)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_FLAGS -g)
 set(SOURCE
         src/init.cpp
         src/riscvCallingConvention.cpp
