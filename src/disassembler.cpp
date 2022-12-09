@@ -1,7 +1,7 @@
 #include "disassembler.h"
 
 Instruction Disassembler::disasm(const uint8_t* data, uint64_t addr) {
-	auto* insdword = (uint32_t*)data;
+	uint32_t* insdword = (uint32_t*)data;
 
 	uint8_t opcode = *insdword & 0b1111111;
 	Instruction instr {
@@ -321,8 +321,8 @@ Instruction Disassembler::implBtype(uint32_t insdword) {
 Instruction Disassembler::implUtype(uint32_t insdword) {
 	Instruction instr;
 	instr.type = Utype;
-	instr.imm = (int64_t)(int32_t)(insdword & 0xfffff999);
 	instr.rd = (insdword >> 7) & 0b11111;
+	instr.imm = insdword >> 12;
 
 	return instr;
 }

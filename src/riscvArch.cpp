@@ -135,7 +135,7 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
         }
         case Btype: {
             char buf[32];
-            sprintf(buf, "0x%llx", res.imm);
+            snprintf(buf, sizeof(buf), "0x%llx", res.imm + addr);
 
             result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
             result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
@@ -152,7 +152,7 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
         }
         case Jtype: {
             char buf[32];
-            sprintf(buf, "0x%llx", res.imm);
+            snprintf(buf, sizeof(buf), "0x%llx", res.imm);
             if (res.mnemonic != InstrName::J) {
                 result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rd]);
                 result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
