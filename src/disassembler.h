@@ -8,7 +8,7 @@
 #include "binaryninjaapi.h"
 
 enum Registers {
-	Zero,
+	Zero = 0,
 	// x1 - return address (caller saved)
 	ra,
 	// x2 - stack pointer (callee saved)

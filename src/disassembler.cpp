@@ -41,7 +41,6 @@ Instruction Disassembler::disasm(const uint8_t* data, uint64_t addr) {
 	}
 	case 0b1100011: { // Branch Instructions
 		instr = implBtype(*insdword);
-		// instr.imm += addr;
 
 		switch (instr.funct3) {
 		case 0b000:
@@ -261,9 +260,10 @@ Instruction Disassembler::disasm(const uint8_t* data, uint64_t addr) {
 		}
 		return instr;
 	default:
+	/*
 		BinaryNinja::Log(ErrorLog,
 			"Unimplemented instr - Addr: 0x%llx, Opcode: 0x%x\n", addr,
-			opcode);
+			opcode);*/
 		instr.type = InstrType::Error;
 		instr.mnemonic = InstrName::UNSUPPORTED;
 		return instr;
@@ -288,22 +288,16 @@ Instruction Disassembler::implItype(uint32_t insdword) {
 	instr.rs1 = (insdword >> 15) & 0b11111;
 	instr.rd = (insdword >> 7) & 0b11111;
 	instr.funct3 = (insdword >> 12) & 0b111;
-	struct
-	{
-		int64_t x : 12;
-	} s {};
-	instr.imm = s.x = ((insdword) >> 20);
+	instr.imm = ((int64_t)(int32_t) (insdword & 0xfff00000)) >> 20;
 
 	return instr;
 }
 
 Instruction Disassembler::implStype(uint32_t insdword) {
-	uint32_t imm115 = (insdword >> 25) & 0b1111111;
-	uint32_t imm40 = (insdword >> 7) & 0b11111;
-
 	Instruction instr;
 	instr.type = Stype;
-	instr.imm = (((int64_t)insdword << 32) >> 57) << 5 | (insdword << 52) >> 59;
+
+	instr.imm = ((int64_t)(int32_t)(insdword & 0xfe000000) >> 20) | ((insdword >> 7) & 0x1f);
 	instr.rs2 = (insdword >> 20) & 0b11111;
 	instr.rs1 = (insdword >> 15) & 0b11111;
 	instr.funct3 = (insdword >> 12) & 0b111;
@@ -312,15 +306,12 @@ Instruction Disassembler::implStype(uint32_t insdword) {
 }
 
 Instruction Disassembler::implBtype(uint32_t insdword) {
-	uint32_t imm12 = (insdword >> 31) & 1;
-	uint32_t imm105 = (insdword >> 25) & 0b111111;
-	uint32_t imm41 = (insdword >> 8) & 0b1111;
-	uint32_t imm11 = (insdword >> 7) & 1;
-	uint32_t imm = (imm12 << 12) | (imm11 << 11) | (imm105 << 5) | (imm41 << 1);
-
 	Instruction instr;
 	instr.type = Btype;
-	instr.imm = (((uint32_t)imm) << 19) >> 19;
+	instr.imm = ((int64_t)(int32_t)(insdword & 0x80000000) >> 19)
+        | ((insdword & 0x80) << 4) // imm[11]
+        | ((insdword >> 20) & 0x7e0) // imm[10:5]
+        | ((insdword >> 7) & 0x1e); // imm[4:1]
 	instr.rs2 = (insdword >> 20) & 0b11111;
 	instr.rs1 = (insdword >> 15) & 0b11111;
 	instr.funct3 = (insdword >> 12) & 0b111;
@@ -330,22 +321,19 @@ Instruction Disassembler::implBtype(uint32_t insdword) {
 Instruction Disassembler::implUtype(uint32_t insdword) {
 	Instruction instr;
 	instr.type = Utype;
-	instr.imm = (insdword & !0xfff);
+	instr.imm = (int64_t)(int32_t)(insdword & 0xfffff999);
 	instr.rd = (insdword >> 7) & 0b11111;
 
 	return instr;
 }
 
 Instruction Disassembler::implJtype(uint32_t insdword) {
-	uint32_t imm20 = (insdword >> 31) & 1;
-	uint32_t imm101 = (insdword >> 21) & 0b1111111111;
-	uint32_t imm11 = (insdword >> 20) & 1;
-	uint32_t imm1912 = (insdword >> 12) & 0b11111111;
-	uint32_t imm = (imm20 << 20) | (imm1912 << 12) | (imm11 << 11) | (imm101 << 1);
-
 	Instruction instr;
 	instr.type = Jtype;
-	instr.imm = ((int64_t)imm << 11) >> 11;
+	instr.imm = (uint64_t)((int64_t)(int32_t)(insdword & 0x80000000) >> 11)
+        | (insdword & 0xff000) // imm[19:12]
+        | ((insdword >> 9) & 0x800) // imm[11]
+        | ((insdword >> 20) & 0x7fe); // imm[10:1]
 	instr.rd = (insdword >> 7) & 0b11111;
 	return instr;
 }

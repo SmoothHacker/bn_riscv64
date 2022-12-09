@@ -16,7 +16,6 @@ BINARYNINJAPLUGIN bool CorePluginInit() {
 
 #define EM_RISCV 243
 	BinaryViewType::RegisterArchitecture("ELF", EM_RISCV, BigEndian, riscv);
-
 	BinaryViewType::RegisterArchitecture("ELF", EM_RISCV, LittleEndian, riscv);
 	return true;
 }
