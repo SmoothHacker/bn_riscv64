@@ -1,4 +1,5 @@
 #include "riscvArch.h"
+#include "binaryninjacore.h"
 #include "disassembler.h"
 #include "lifter.h"
 #include "disassembler.h"
@@ -82,8 +83,8 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
             result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
             result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
 
-            if (res.mnemonic == InstrName::SLLIW)
-                result.emplace_back(BNInstructionTextTokenType::IntegerToken, std::to_string(res.funct3));
+            if (res.mnemonic == InstrName::SLLIW || res.mnemonic == InstrName::SLLI || res.mnemonic == InstrName::SRLI || res.mnemonic == InstrName::SRLIW || res.mnemonic == InstrName::SRAI || res.mnemonic == InstrName::SRAIW)
+                result.emplace_back(BNInstructionTextTokenType::IntegerToken, std::to_string(res.rs2));
             else
                 result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs2]);
             break;
@@ -108,11 +109,27 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
                 case InstrName::LD:
                     result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rd]);
                     result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
-                case InstrName::JALR:
                     result.emplace_back(BNInstructionTextTokenType::CodeRelativeAddressToken, std::to_string(res.imm));
                     result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, "(");
                     result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
                     result.emplace_back(BNInstructionTextTokenType::TextToken, ")");
+                    break;
+                case InstrName::JR:
+                case InstrName::JALR: {
+                    if (res.imm == 0) {
+                        result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
+                    } else {
+                        result.emplace_back(BNInstructionTextTokenType::CodeRelativeAddressToken, std::to_string(res.imm));
+                        result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, "(");
+                        result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
+                        result.emplace_back(BNInstructionTextTokenType::TextToken, ")");
+                    }
+                    break;
+                }
+                case InstrName::MV:
+                    result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rd]);
+                    result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
+                    result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
                     break;
                 default:
                     result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rd]);

@@ -32,8 +32,10 @@ Instruction Disassembler::disasm(const uint8_t* data, uint64_t addr) {
 	}
 	case 0b1100111: { // JALR
 		instr = implItype(*insdword);
-		if (instr.rd == Registers::Zero) {
+		if (instr.rd == Registers::Zero && instr.rs1 == Registers::ra) {
 			instr.mnemonic = InstrName::RET;
+		} else if(instr.rd == Registers::Zero) {
+			instr.mnemonic = InstrName::JR;
 		} else {
 			instr.mnemonic = InstrName::JALR;
 		}
@@ -138,6 +140,8 @@ Instruction Disassembler::disasm(const uint8_t* data, uint64_t addr) {
 		case 0b000: { // Covers pseudo-instr load immediate - li
 			if (instr.rs1 == Registers::Zero)
 				instr.mnemonic = InstrName::LI;
+			else if (instr.imm == 0)
+				instr.mnemonic = InstrName::MV;
 			else
 				instr.mnemonic = InstrName::ADDI;
 			break;

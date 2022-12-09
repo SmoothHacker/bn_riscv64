@@ -291,6 +291,12 @@ void liftToLowLevelIL(const uint8_t* data, uint64_t addr, size_t& len,
 	case RET:
 		expr = il.Return(il.Register(8, inst.rs1));
 		break;
+	case MV:
+		expr = il.SetRegister(8, il.Register(8, inst.rd), il.Register(8, inst.rs1));
+		break;
+	case JR:
+		expr = il.Jump(il.Register(8, inst.rs1));
+		break;
 	default:
 		break;
 	}

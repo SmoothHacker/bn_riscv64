@@ -68,7 +68,7 @@ static const char* instrNames[] = {
 	"slli", "srli", "add", "sub", "sll", "slt", "sltu", "xor",
 	"srl", "sra", "or", "and", "fence", "ecall", "ebreak", "lwu",
 	"ld", "sd", "srai", "addiw", "slliw", "srliw", "sraiw", "addw",
-	"subw", "sllw", "srlw", "sraw", "j", "li", "ret"
+	"subw", "sllw", "srlw", "sraw", "j", "li", "ret", "mv", "jr"
 };
 
 #define ENUM_PRINTER(op) \
@@ -135,7 +135,9 @@ enum InstrName {
 	// Pseudo-instructions for RV64I
 	J,
 	LI,
-	RET
+	RET,
+	MV,
+	JR
 };
 
 enum InstrType {
