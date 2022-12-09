@@ -73,12 +73,29 @@ void liftToLowLevelIL(const uint8_t* data, uint64_t addr, size_t& len,
 			il.Sub(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
 		break;
 	case AUIPC:
-		expr = il.SetRegister(8, inst.rd, il.Const(8, inst.imm + addr));
+		expr = il.SetRegister(8, inst.rd, il.Const(8, (inst.imm << 12) + addr));
 		break;
 	case JAL:
 		break;
-	case JALR: { //TODO Verify behavior
-		ExprId target = il.Const(8, (inst.imm + inst.rs1) & ~1);
+	case JALR: {
+		// JALR has to follow a set of return-address-stack (RAS) actions
+		/*if((inst.rd == Registers::ra || inst.rd == Registers::t0) && (inst.rs1 == Registers::ra || inst.rs1 == Registers::t0)) {
+			// Check if rs1 == rd
+			if (inst.rs1 != inst.rd) {
+				// pop, then push
+				il.AddInstruction(il.Pop(8, ));
+			}
+			// push
+			il.AddInstruction(il.Push(8, target));
+		} else if((inst.rd == Registers::ra || inst.rd == Registers::t0) && (inst.rs1 != Registers::ra && inst.rs1 != Registers::t0)) {
+			// push
+		} else if((inst.rd != Registers::ra && inst.rd != Registers::t0) && (inst.rs1 == Registers::ra || inst.rs1 == Registers::t0)) {
+			// pop
+		}*/
+
+		ExprId target = il.Add(8, il.Const(8, inst.imm), il.Register(8, inst.rs1));
+		if(inst.rd != Registers::Zero)
+			il.AddInstruction(il.SetRegister(8, il.Register(8, inst.rd), il.Const(8, il.GetCurrentAddress() + 4)));
 		expr = il.Jump(target);
 	} break;
 	case BEQ:
