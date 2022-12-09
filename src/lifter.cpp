@@ -1,11 +1,14 @@
 #include "lifter.h"
+#include "binaryninjaapi.h"
 
 ExprId cond_branch(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 	ExprId condition) {
 	uint64_t dest = inst.imm + il.GetCurrentAddress();
 	uint64_t nextInst = il.GetCurrentAddress() + 4;
-	auto trueLabel = il.GetLabelForAddress(il.GetArchitecture(), dest);
-	auto falseLabel = il.GetLabelForAddress(il.GetArchitecture(), nextInst);
+	return il.Jump(il.ConstPointer(8, dest));
+
+	BNLowLevelILLabel* trueLabel = il.GetLabelForAddress(il.GetArchitecture(), dest);
+	BNLowLevelILLabel* falseLabel = il.GetLabelForAddress(il.GetArchitecture(), nextInst);
 
 	if (trueLabel && falseLabel)
 		return il.If(condition, *trueLabel, *falseLabel);
@@ -13,13 +16,13 @@ ExprId cond_branch(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 	LowLevelILLabel trueCode, falseCode;
 	if (trueLabel) {
 		il.AddInstruction(il.If(condition, *trueLabel, falseCode));
-		il.MarkLabel(trueCode);
+		il.MarkLabel(falseCode);
 		return il.Jump(il.ConstPointer(8, nextInst));
 	}
 
 	if (falseLabel) {
 		il.AddInstruction(il.If(condition, trueCode, *falseLabel));
-		il.MarkLabel(falseCode);
+		il.MarkLabel(trueCode);
 		return il.Jump(il.ConstPointer(8, dest));
 	}
 
@@ -74,19 +77,9 @@ void liftToLowLevelIL(const uint8_t* data, uint64_t addr, size_t& len,
 		break;
 	case JAL:
 		break;
-	case JALR: {
-		ExprId rs1;
-		if (inst.rs1 != 0)
-			rs1 = il.Register(8, inst.rs1);
-		else
-			rs1 = il.Const(8, 0);
-
-		ExprId target = il.Add(8, rs1, il.Const(8, inst.imm));
-		if (inst.rd != 0) // Link
-		                  // il.AddInstruction(il.SetRegister(8, inst.rd,
-		                  // il.Add(8, rs1, il.Const(8, -inst.imm + addr))));
-
-			expr = il.Call(target);
+	case JALR: { //TODO Verify behavior
+		ExprId target = il.Const(8, (inst.imm + inst.rs1) & ~1);
+		expr = il.Jump(target);
 	} break;
 	case BEQ:
 		if (inst.rs2 == Registers::Zero)
