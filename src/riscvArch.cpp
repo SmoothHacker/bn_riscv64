@@ -116,14 +116,12 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
                     break;
                 case InstrName::JR:
                 case InstrName::JALR: {
-                    if (res.imm == 0) {
-                        result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
-                    } else {
-                        result.emplace_back(BNInstructionTextTokenType::CodeRelativeAddressToken, std::to_string(res.imm));
-                        result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, "(");
-                        result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
-                        result.emplace_back(BNInstructionTextTokenType::TextToken, ")");
-                    }
+                    result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rd]);
+                    result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
+                    result.emplace_back(BNInstructionTextTokenType::CodeRelativeAddressToken, std::to_string(res.imm));
+                    result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, "(");
+                    result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
+                    result.emplace_back(BNInstructionTextTokenType::TextToken, ")");
                     break;
                 }
                 case InstrName::MV:

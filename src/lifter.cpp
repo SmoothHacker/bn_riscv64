@@ -1,5 +1,6 @@
 #include "lifter.h"
 #include "binaryninjaapi.h"
+#include "disassembler.h"
 
 ExprId cond_branch(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 	ExprId condition) {
@@ -75,8 +76,14 @@ void liftToLowLevelIL(const uint8_t* data, uint64_t addr, size_t& len,
 	case AUIPC:
 		expr = il.SetRegister(8, inst.rd, il.Const(8, (inst.imm << 12) + addr));
 		break;
-	case JAL:
-		break;
+	case JAL: {
+		// link
+		il.AddInstruction(il.SetRegister(8, inst.rd, il.Const(8, addr + 4)));
+
+		// Jump
+		ExprId target = il.Add(8, il.Const(8, addr), il.Const(8, inst.imm));
+		expr = il.Jump(target);
+	} break;
 	case JALR: {
 		// JALR has to follow a set of return-address-stack (RAS) actions
 		/*if((inst.rd == Registers::ra || inst.rd == Registers::t0) && (inst.rs1 == Registers::ra || inst.rs1 == Registers::t0)) {
@@ -91,11 +98,23 @@ void liftToLowLevelIL(const uint8_t* data, uint64_t addr, size_t& len,
 			// push
 		} else if((inst.rd != Registers::ra && inst.rd != Registers::t0) && (inst.rs1 == Registers::ra || inst.rs1 == Registers::t0)) {
 			// pop
-		}*/
+		}
 
 		ExprId target = il.Add(8, il.Const(8, inst.imm), il.Register(8, inst.rs1));
-		if(inst.rd != Registers::Zero)
-			il.AddInstruction(il.SetRegister(8, il.Register(8, inst.rd), il.Const(8, il.GetCurrentAddress() + 4)));
+		if(inst.rd == Registers::ra)
+			il.AddInstruction(il.SetRegister(8, il.Register(8, inst.rd), il.Const(8, addr + 4)));
+		expr = il.Call(target); */
+
+		ExprId rs1;
+		if (inst.rs1 != Registers::Zero)
+			rs1 = il.Register(8, inst.rs1);
+		else
+			rs1 = il.Const(8, 0);
+		ExprId target = il.Add(8, rs1, il.Const(8, inst.imm));
+
+		if (inst.rd != Registers::Zero) {
+			il.AddInstruction(il.SetRegister(8, inst.rd, il.Add(8, rs1, il.Const(8, inst.imm + addr))));
+		}
 		expr = il.Jump(target);
 	} break;
 	case BEQ:
