@@ -183,7 +183,7 @@ Instruction Disassembler::disasm(const uint8_t* data, uint64_t addr) {
 		}
 		return instr;
 	}
-	case 0b0110011: { // Register Arithmetic
+	case 0b0110011: { // Register Arithmetic - 64bit
 		instr = implRtype(*insdword);
 		switch (instr.funct3) {
 		case 0b000: {
@@ -218,6 +218,36 @@ Instruction Disassembler::disasm(const uint8_t* data, uint64_t addr) {
 		case 0b111:
 			instr.mnemonic = InstrName::AND;
 			break;
+		default:
+			BinaryNinja::Log(ErrorLog,
+				"Unknown funct3 [%d] for Register Arithmetic instr",
+				instr.funct3);
+			instr.type = InstrType::Error;
+			instr.mnemonic = InstrName::UNSUPPORTED;
+			break;
+		}
+		return instr;
+	}
+	case 0b0111011: {
+		instr = implRtype(*insdword);
+		switch (instr.funct3) {
+		case 0b000: {
+			if (instr.funct7 == 0)
+				instr.mnemonic = InstrName::ADDW;
+			else
+				instr.mnemonic = InstrName::SUBW;
+			break;
+		}
+		case 0b001:
+			instr.mnemonic = InstrName::SLLW;
+			break;
+		case 0b101: {
+			if (instr.funct7 == 0)
+				instr.mnemonic = InstrName::SRLW;
+			else
+				instr.mnemonic = InstrName::SRAW;
+			break;
+		}
 		default:
 			BinaryNinja::Log(ErrorLog,
 				"Unknown funct3 [%d] for Register Arithmetic instr",

@@ -46,9 +46,9 @@ ExprId store_helper(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 };
 
 ExprId load_helper(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
-	uint64_t size, bool isUnsigned) {
+	uint64_t size, bool shouldZeroExtend) {
 	ExprId addr = il.Add(8, il.Register(8, inst.rs1), il.Const(8, inst.imm));
-	if (isUnsigned)
+	if (shouldZeroExtend)
 		return il.SetRegister(8, inst.rd, il.ZeroExtend(8, il.Load(size, addr)));
 	else
 		return il.SetRegister(8, inst.rd, il.SignExtend(8, il.Load(size, addr)));
@@ -66,7 +66,7 @@ void liftToLowLevelIL(const uint8_t* data, uint64_t addr, size_t& len,
 	case ADD:
 		expr = il.SetRegister(
 			8, inst.rd,
-			il.Add(4, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
+			il.Add(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
 		break;
 	case SUB:
 		expr = il.SetRegister(
@@ -98,13 +98,11 @@ void liftToLowLevelIL(const uint8_t* data, uint64_t addr, size_t& len,
 			// push
 		} else if((inst.rd != Registers::ra && inst.rd != Registers::t0) && (inst.rs1 == Registers::ra || inst.rs1 == Registers::t0)) {
 			// pop
-		}
+		}*/
 
 		ExprId target = il.Add(8, il.Const(8, inst.imm), il.Register(8, inst.rs1));
-		if(inst.rd == Registers::ra)
-			il.AddInstruction(il.SetRegister(8, il.Register(8, inst.rd), il.Const(8, addr + 4)));
-		expr = il.Call(target); */
-
+		expr = il.Call(target);
+/*
 		ExprId rs1;
 		if (inst.rs1 != Registers::Zero)
 			rs1 = il.Register(8, inst.rs1);
@@ -115,7 +113,7 @@ void liftToLowLevelIL(const uint8_t* data, uint64_t addr, size_t& len,
 		if (inst.rd != Registers::Zero) {
 			il.AddInstruction(il.SetRegister(8, inst.rd, il.Add(8, rs1, il.Const(8, inst.imm + addr))));
 		}
-		expr = il.Jump(target);
+		expr = il.Jump(target);*/
 	} break;
 	case BEQ:
 		if (inst.rs2 == Registers::Zero)
@@ -194,7 +192,7 @@ void liftToLowLevelIL(const uint8_t* data, uint64_t addr, size_t& len,
 		expr = load_helper(il, inst, 4, false);
 		break;
 	case LD:
-		expr = load_helper(il, inst, 8, false);
+		expr = load_helper(il, inst, 8, true);
 		break;
 	case SB:
 		expr = store_helper(il, inst, 1);
@@ -302,10 +300,17 @@ void liftToLowLevelIL(const uint8_t* data, uint64_t addr, size_t& len,
 				il.Const(4, inst.funct3)));
 		break;
 	case SRAIW:
+		expr = il.SetRegister(4, inst.rd,
+			il.ArithShiftRight(4, il.Register(4, inst.rs1),
+				il.Const(4, inst.funct3)));
 		break;
 	case ADDW:
+		expr = il.SetRegister(4, inst.rd,
+				il.Add(4, il.Register(4, inst.rs1), il.Register(4, inst.rs2)));
 		break;
 	case SUBW:
+		expr = il.SetRegister(4, inst.rd,
+			il.Sub(4, il.Register(4, inst.rs1), il.Register(4, inst.rs2)));
 		break;
 	case SLLW:
 		break;

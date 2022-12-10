@@ -21,10 +21,6 @@ riscvArch::GetInstructionInfo(const uint8_t *data, uint64_t addr, size_t maxLen,
         return false;
     }
 
-    // Check for func return
-    if (res.mnemonic == InstrName::RET)
-        result.AddBranch(BNBranchType::FunctionReturn);
-
     // Check for branches
     switch (res.mnemonic) {
         case InstrName::BEQ:
@@ -33,18 +29,14 @@ riscvArch::GetInstructionInfo(const uint8_t *data, uint64_t addr, size_t maxLen,
         case InstrName::BGE:
         case InstrName::BLTU:
         case InstrName::BGEU:
-            result.AddBranch(BNBranchType::TrueBranch, res.imm + addr, nullptr, false);
-            result.AddBranch(BNBranchType::FalseBranch, addr + 4, nullptr, false);
+            result.AddBranch(BNBranchType::TrueBranch, res.imm + addr);
+            result.AddBranch(BNBranchType::FalseBranch, addr + 4);
             break;
         case InstrName::J:
             result.AddBranch(BNBranchType::UnconditionalBranch, res.imm);
             break;
-        case InstrName::JAL:
-        case InstrName::JALR:
-            if (res.rd == 1 && res.imm == 0)
-                result.AddBranch(BNBranchType::FunctionReturn, res.imm + addr);
-            else
-                result.AddBranch(BNBranchType::CallDestination);
+        case InstrName::RET:
+            result.AddBranch(BNBranchType::FunctionReturn);
             break;
         default:
             break;
