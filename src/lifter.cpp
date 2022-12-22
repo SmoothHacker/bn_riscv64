@@ -37,12 +37,8 @@ ExprId cond_branch(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 ExprId store_helper(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 	uint64_t size) {
 	ExprId addr = il.Add(8, il.Register(8, inst.rs1), il.Const(8, inst.imm));
-	ExprId val = il.Register(size, inst.rs2);
-
-	if (inst.mnemonic == SD)
-		return il.Store(size, addr, il.LowPart(size, val));
-	else
-		return il.Store(size, addr, val);
+	ExprId val = il.Register(8, inst.rs2);
+	return il.Store(size, addr, val);
 };
 
 ExprId load_helper(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
