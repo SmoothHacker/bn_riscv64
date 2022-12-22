@@ -35,9 +35,6 @@ riscvArch::GetInstructionInfo(const uint8_t *data, uint64_t addr, size_t maxLen,
         case InstrName::J:
             result.AddBranch(BNBranchType::UnconditionalBranch, res.imm);
             break;
-        case InstrName::JAL:
-            result.AddBranch(BNBranchType::CallDestination, res.imm);
-            break;
         case InstrName::RET:
             result.AddBranch(BNBranchType::FunctionReturn);
             break;
