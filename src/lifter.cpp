@@ -2,14 +2,13 @@
 #include "binaryninjaapi.h"
 #include "disassembler.h"
 
-ExprId cond_branch(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
+ExprId cond_branch(Architecture *arch, BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 	ExprId condition) {
 	uint64_t dest = inst.imm + il.GetCurrentAddress();
 	uint64_t nextInst = il.GetCurrentAddress() + 4;
-	return il.Jump(il.ConstPointer(8, dest));
 
-	BNLowLevelILLabel* trueLabel = il.GetLabelForAddress(il.GetArchitecture(), dest);
-	BNLowLevelILLabel* falseLabel = il.GetLabelForAddress(il.GetArchitecture(), nextInst);
+	BNLowLevelILLabel* trueLabel = il.GetLabelForAddress(arch, dest);
+	BNLowLevelILLabel* falseLabel = il.GetLabelForAddress(arch, nextInst);
 
 	if (trueLabel && falseLabel)
 		return il.If(condition, *trueLabel, *falseLabel);
@@ -50,7 +49,7 @@ ExprId load_helper(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 		return il.SetRegister(8, inst.rd, il.SignExtend(8, il.Load(size, addr)));
 }
 
-void liftToLowLevelIL(const uint8_t* data, uint64_t addr, size_t& len,
+void liftToLowLevelIL(Architecture *arch, const uint8_t* data, uint64_t addr, size_t& len,
 	BinaryNinja::LowLevelILFunction& il) {
 	Instruction inst = Disassembler::disasm(data, addr);
 	ExprId expr = il.Unimplemented();
@@ -114,58 +113,61 @@ void liftToLowLevelIL(const uint8_t* data, uint64_t addr, size_t& len,
 	case BEQ:
 		if (inst.rs2 == Registers::Zero)
 			expr = cond_branch(
+				arch,
 				il, inst,
 				il.CompareEqual(8, il.Register(8, inst.rs1), il.Const(8, 0)));
 		else
-			expr = cond_branch(il, inst,
+			expr = cond_branch(arch, il, inst,
 				il.CompareEqual(8, il.Register(8, inst.rs1),
 					il.Register(8, inst.rs2)));
 		break;
 	case BNE:
 		if (inst.rs2 == Registers::Zero)
 			expr = cond_branch(
+				arch,
 				il, inst,
 				il.CompareNotEqual(8, il.Register(8, inst.rs1), il.Const(8, 0)));
 		else
-			expr = cond_branch(il, inst,
+			expr = cond_branch(
+				arch, il, inst,
 				il.CompareNotEqual(8, il.Register(8, inst.rs1),
 					il.Register(8, inst.rs2)));
 		break;
 	case BLT:
 		if (inst.rs2 == Registers::Zero)
-			expr = cond_branch(il, inst,
+			expr = cond_branch(arch, il, inst,
 				il.CompareSignedLessThan(8, il.Register(8, inst.rs1),
 					il.Const(8, 0)));
 		else if (inst.rs1 == Registers::Zero)
-			expr = cond_branch(il, inst,
+			expr = cond_branch(arch, il, inst,
 				il.CompareSignedLessThan(8, il.Const(8, 0),
 					il.Register(8, inst.rs2)));
 		else
-			expr = cond_branch(il, inst,
+			expr = cond_branch(arch, il, inst,
 				il.CompareSignedLessThan(8, il.Register(8, inst.rs1),
 					il.Register(8, inst.rs2)));
 		break;
 	case BGE:
 		if (inst.rs2 == Registers::Zero)
-			expr = cond_branch(il, inst,
+			expr = cond_branch(arch, il, inst,
 				il.CompareSignedGreaterEqual(
 					8, il.Register(8, inst.rs1), il.Const(8, 0)));
 		else if (inst.rs1 == Registers::Zero)
-			expr = cond_branch(il, inst,
+			expr = cond_branch(arch, il, inst,
 				il.CompareSignedGreaterEqual(
 					8, il.Const(8, 0), il.Register(8, inst.rs2)));
 		else
-			expr = cond_branch(il, inst,
+			expr = cond_branch(arch, il, inst,
 				il.CompareSignedGreaterEqual(8, il.Register(8, inst.rs1),
 					il.Register(8, inst.rs2)));
 		break;
 	case BLTU:
-		expr = cond_branch(il, inst,
+		expr = cond_branch(arch, il, inst,
 			il.CompareUnsignedLessThan(8, il.Register(8, inst.rs1),
 				il.Register(8, inst.rs2)));
 		break;
 	case BGEU:
-		expr = cond_branch(il, inst,
+		expr = cond_branch(arch, il, inst,
 			il.CompareUnsignedGreaterEqual(8, il.Register(8, inst.rs1),
 				il.Register(8, inst.rs2)));
 		break;

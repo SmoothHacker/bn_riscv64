@@ -176,7 +176,7 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
 
 bool riscvArch::GetInstructionLowLevelIL(const uint8_t *data, uint64_t addr, size_t &len,
                                          BinaryNinja::LowLevelILFunction &il) {
-    liftToLowLevelIL(data, addr, len, il);
+    liftToLowLevelIL(this, data, addr, len, il);
     len = 4;
     return true;
 }
