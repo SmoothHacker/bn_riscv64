@@ -2,8 +2,9 @@
 #include "binaryninjaapi.h"
 #include "disassembler.h"
 
-ExprId cond_branch(Architecture *arch, BinaryNinja::LowLevelILFunction& il, Instruction& inst,
-	ExprId condition) {
+ExprId cond_branch(Architecture* arch, BinaryNinja::LowLevelILFunction& il, Instruction& inst,
+	ExprId condition)
+{
 	uint64_t dest = inst.imm + il.GetCurrentAddress();
 	uint64_t nextInst = il.GetCurrentAddress() + 4;
 
@@ -34,7 +35,8 @@ ExprId cond_branch(Architecture *arch, BinaryNinja::LowLevelILFunction& il, Inst
 }
 
 ExprId store_helper(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
-	uint64_t size) {
+	uint64_t size)
+{
 	if (inst.rs2 == Registers::Zero) {
 		return il.Nop();
 	}
@@ -44,7 +46,8 @@ ExprId store_helper(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 };
 
 ExprId load_helper(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
-	uint64_t size, bool shouldZeroExtend) {
+	uint64_t size, bool shouldZeroExtend)
+{
 	if (inst.rd == Registers::Zero) {
 		return il.Nop();
 	}
@@ -57,8 +60,9 @@ ExprId load_helper(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 		return il.SetRegister(8, inst.rd, il.SignExtend(8, il.Load(size, addr)));
 }
 
-void liftToLowLevelIL(Architecture *arch, const uint8_t* data, uint64_t addr, size_t& len,
-	BinaryNinja::LowLevelILFunction& il) {
+void liftToLowLevelIL(Architecture* arch, const uint8_t* data, uint64_t addr, size_t& len,
+	BinaryNinja::LowLevelILFunction& il)
+{
 	Instruction inst = Disassembler::disasm(data, addr);
 	ExprId expr = il.Unimplemented();
 	switch (inst.mnemonic) {
@@ -90,33 +94,33 @@ void liftToLowLevelIL(Architecture *arch, const uint8_t* data, uint64_t addr, si
 	case JALR: {
 		// JALR has to follow a set of return-address-stack (RAS) actions
 		/*if((inst.rd == Registers::ra || inst.rd == Registers::t0) && (inst.rs1 == Registers::ra || inst.rs1 == Registers::t0)) {
-			// Check if rs1 == rd
-			if (inst.rs1 != inst.rd) {
-				// pop, then push
-				il.AddInstruction(il.Pop(8, ));
-			}
-			// push
-			il.AddInstruction(il.Push(8, target));
+		    // Check if rs1 == rd
+		    if (inst.rs1 != inst.rd) {
+		        // pop, then push
+		        il.AddInstruction(il.Pop(8, ));
+		    }
+		    // push
+		    il.AddInstruction(il.Push(8, target));
 		} else if((inst.rd == Registers::ra || inst.rd == Registers::t0) && (inst.rs1 != Registers::ra && inst.rs1 != Registers::t0)) {
-			// push
+		    // push
 		} else if((inst.rd != Registers::ra && inst.rd != Registers::t0) && (inst.rs1 == Registers::ra || inst.rs1 == Registers::t0)) {
-			// pop
+		    // pop
 		}*/
 
 		ExprId target = il.Add(8, il.Const(8, inst.imm), il.Register(8, inst.rs1));
 		expr = il.Call(target);
-/*
-		ExprId rs1;
-		if (inst.rs1 != Registers::Zero)
-			rs1 = il.Register(8, inst.rs1);
-		else
-			rs1 = il.Const(8, 0);
-		ExprId target = il.Add(8, rs1, il.Const(8, inst.imm));
+		/*
+		        ExprId rs1;
+		        if (inst.rs1 != Registers::Zero)
+		            rs1 = il.Register(8, inst.rs1);
+		        else
+		            rs1 = il.Const(8, 0);
+		        ExprId target = il.Add(8, rs1, il.Const(8, inst.imm));
 
-		if (inst.rd != Registers::Zero) {
-			il.AddInstruction(il.SetRegister(8, inst.rd, il.Add(8, rs1, il.Const(8, inst.imm + addr))));
-		}
-		expr = il.Jump(target);*/
+		        if (inst.rd != Registers::Zero) {
+		            il.AddInstruction(il.SetRegister(8, inst.rd, il.Add(8, rs1, il.Const(8, inst.imm + addr))));
+		        }
+		        expr = il.Jump(target);*/
 	} break;
 	case BEQ:
 		if (inst.rs2 == Registers::Zero)
@@ -260,8 +264,7 @@ void liftToLowLevelIL(Architecture *arch, const uint8_t* data, uint64_t addr, si
 			il.CompareSignedLessThan(8, operand,
 				il.Register(8, inst.rs2)));
 		break;
-	}
-		break;
+	} break;
 	case SLTU: {
 		ExprId operand;
 		if (inst.rs1 == Registers::Zero)
@@ -327,7 +330,7 @@ void liftToLowLevelIL(Architecture *arch, const uint8_t* data, uint64_t addr, si
 		break;
 	case ADDW:
 		expr = il.SetRegister(4, inst.rd,
-				il.Add(4, il.Register(4, inst.rs1), il.Register(4, inst.rs2)));
+			il.Add(4, il.Register(4, inst.rs1), il.Register(4, inst.rs2)));
 		break;
 	case SUBW:
 		expr = il.SetRegister(4, inst.rd,

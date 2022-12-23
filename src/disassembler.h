@@ -71,11 +71,6 @@ static const char* instrNames[] = {
 	"subw", "sllw", "srlw", "sraw", "j", "li", "ret", "mv", "jr"
 };
 
-#define ENUM_PRINTER(op) \
-	case op: \
-		printf(#op); \
-		break;
-
 enum InstrName {
 	UNSUPPORTED = -1,
 	// RV32I Base

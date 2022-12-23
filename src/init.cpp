@@ -5,7 +5,8 @@ using namespace BinaryNinja;
 extern "C" {
 BN_DECLARE_CORE_ABI_VERSION
 
-BINARYNINJAPLUGIN bool CorePluginInit() {
+BINARYNINJAPLUGIN bool CorePluginInit()
+{
 	Architecture* riscv = new riscvArch("RISC-V", LittleEndian);
 	Architecture::Register(riscv);
 
