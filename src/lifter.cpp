@@ -35,6 +35,9 @@ ExprId cond_branch(Architecture *arch, BinaryNinja::LowLevelILFunction& il, Inst
 
 ExprId store_helper(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 	uint64_t size) {
+	if (inst.rs2 == Registers::Zero) {
+		return il.Nop();
+	}
 	ExprId addr = il.Add(8, il.Register(8, inst.rs1), il.Const(8, inst.imm));
 	ExprId val = il.Register(8, inst.rs2);
 	return il.Store(size, addr, val);
@@ -42,6 +45,9 @@ ExprId store_helper(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 
 ExprId load_helper(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 	uint64_t size, bool shouldZeroExtend) {
+	if (inst.rd == Registers::Zero) {
+		return il.Nop();
+	}
 	ExprId addr = il.Add(8, il.Register(8, inst.rs1), il.Const(8, inst.imm));
 	if (shouldZeroExtend)
 		return il.SetRegister(8, inst.rd, il.ZeroExtend(8, il.Load(size, addr)));
@@ -331,7 +337,7 @@ void liftToLowLevelIL(Architecture *arch, const uint8_t* data, uint64_t addr, si
 		expr = il.Return(il.Register(8, inst.rs1));
 		break;
 	case MV:
-		expr = il.SetRegister(8, il.Register(8, inst.rd), il.Register(8, inst.rs1));
+		expr = il.SetRegister(8, inst.rd, il.Register(8, inst.rs1));
 		break;
 	case JR:
 		expr = il.Jump(il.Register(8, inst.rs1));

@@ -243,7 +243,7 @@ BNRegisterInfo riscvArch::RegisterInfo(uint32_t fullWidthReg) {
     result.fullWidthRegister = fullWidthReg;
     result.offset = 0;
     result.size = 8;
-    result.extend = SignExtendToFullWidth;
+    result.extend = NoExtend;
     return result;
 }
 
