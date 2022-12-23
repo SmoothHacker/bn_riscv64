@@ -293,6 +293,10 @@ Instruction Disassembler::disasm(const uint8_t* data, uint64_t addr) {
 			break;
 		}
 		return instr;
+	case 0b1111:
+		instr = implItype(*insdword);
+		instr.mnemonic = InstrName::FENCE;
+		return instr;
 	default:
 		BinaryNinja::Log(ErrorLog,
 			"Unimplemented instr - Addr: 0x%llx, Opcode: 0x%x\n", addr,

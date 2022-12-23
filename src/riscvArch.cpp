@@ -121,6 +121,10 @@ bool riscvArch::GetInstructionText(const uint8_t *data, uint64_t addr, size_t &l
                     result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
                     result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rs1]);
                     break;
+                case InstrName::ECALL:
+                case InstrName::EBREAK:
+                case InstrName::FENCE:
+                    break;
                 default:
                     result.emplace_back(BNInstructionTextTokenType::RegisterToken, registerNames[res.rd]);
                     result.emplace_back(BNInstructionTextTokenType::OperandSeparatorToken, ", ");
