@@ -49,7 +49,9 @@ ExprId load_helper(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 		return il.Nop();
 	}
 	ExprId addr = il.Add(8, il.Register(8, inst.rs1), il.Const(8, inst.imm));
-	if (shouldZeroExtend)
+	if (inst.mnemonic == InstrName::LW)
+		return il.SetRegister(8, inst.rd, il.Load(size, addr));
+	else if (shouldZeroExtend)
 		return il.SetRegister(8, inst.rd, il.ZeroExtend(8, il.Load(size, addr)));
 	else
 		return il.SetRegister(8, inst.rd, il.SignExtend(8, il.Load(size, addr)));
@@ -75,7 +77,7 @@ void liftToLowLevelIL(Architecture *arch, const uint8_t* data, uint64_t addr, si
 			il.Sub(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
 		break;
 	case AUIPC:
-		expr = il.SetRegister(8, inst.rd, il.Const(8, (inst.imm << 12) + addr));
+		expr = il.SetRegister(8, inst.rd, il.Const(4, (inst.imm << 12) + addr));
 		break;
 	case JAL: {
 		// link
@@ -351,9 +353,7 @@ void liftToLowLevelIL(Architecture *arch, const uint8_t* data, uint64_t addr, si
 		expr = il.SetRegister(8, inst.rd, il.ConstPointer(8, inst.imm));
 		break;
 	case LUI:
-		expr = il.SetRegister(8, inst.rd,
-			il.ShiftLeft(8, il.ZeroExtend(8, il.Const(3, inst.imm)),
-				il.Const(8, 12)));
+		expr = il.SetRegister(8, inst.rd, il.Const(4, (int64_t)(inst.imm << 12)));
 		break;
 	case RET:
 		expr = il.Return(il.Register(8, inst.rs1));
