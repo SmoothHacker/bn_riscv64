@@ -246,25 +246,43 @@ void liftToLowLevelIL(Architecture *arch, const uint8_t* data, uint64_t addr, si
 				il.Const(8, inst.funct3)));
 		break;
 	case SLL:
+		expr = il.SetRegister(8, inst.rd, il.ShiftLeft(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
 		break;
-	case SLT:
+	case SLT: {
+		ExprId operand;
+		if (inst.rs1 == Registers::Zero)
+			operand = il.Const(8, 0);
+		else
+			operand = il.Register(8, inst.rs1);
+
 		expr = il.SetRegister(8, inst.rd,
-			il.CompareSignedLessThan(8, il.Register(8, inst.rs1),
-				il.Const(8, inst.rs2)));
+			il.CompareSignedLessThan(8, operand,
+				il.Register(8, inst.rs2)));
 		break;
-	case SLTU:
+	}
+		break;
+	case SLTU: {
+		ExprId operand;
+		if (inst.rs1 == Registers::Zero)
+			operand = il.Const(8, 0);
+		else
+			operand = il.Register(8, inst.rs1);
+
 		expr = il.SetRegister(8, inst.rd,
-			il.CompareUnsignedLessThan(8, il.Register(8, inst.rs1),
-				il.Const(8, inst.rs2)));
+			il.CompareUnsignedLessThan(8, operand,
+				il.Register(8, inst.rs2)));
 		break;
+	}
 	case XOR:
 		expr = il.SetRegister(
 			8, inst.rd,
 			il.Xor(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
 		break;
 	case SRL:
+		expr = il.SetRegister(8, inst.rd, il.LogicalShiftRight(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
 		break;
 	case SRA:
+		expr = il.SetRegister(8, inst.rd, il.ArithShiftRight(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
 		break;
 	case OR:
 		expr = il.SetRegister(
@@ -277,6 +295,7 @@ void liftToLowLevelIL(Architecture *arch, const uint8_t* data, uint64_t addr, si
 			il.And(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
 		break;
 	case FENCE:
+		expr = il.Nop();
 		break;
 	case ECALL:
 		expr = il.SystemCall();
@@ -317,10 +336,13 @@ void liftToLowLevelIL(Architecture *arch, const uint8_t* data, uint64_t addr, si
 			il.Sub(4, il.Register(4, inst.rs1), il.Register(4, inst.rs2)));
 		break;
 	case SLLW:
+		expr = il.SetRegister(4, inst.rd, il.ShiftLeft(4, il.Register(4, inst.rs1), il.Register(4, inst.rs2)));
 		break;
 	case SRLW:
+		expr = il.SetRegister(4, inst.rd, il.LogicalShiftRight(4, il.Register(4, inst.rs1), il.Register(4, inst.rs2)));
 		break;
 	case SRAW:
+		expr = il.SetRegister(4, inst.rd, il.ArithShiftRight(4, il.Register(4, inst.rs1), il.Register(4, inst.rs2)));
 		break;
 	case J:
 		expr = il.Jump(il.Const(8, inst.imm));
