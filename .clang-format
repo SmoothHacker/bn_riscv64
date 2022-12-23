@@ -1,11 +1,13 @@
 ---
-BasedOnStyle: WebKit
+BasedOnStyle:	WebKit
 
-AlignConsecutiveMacros: Consecutive
-AlignTrailingComments: true
+AlignConsecutiveMacros:	Consecutive
+AlignTrailingComments:	true
 
-UseTab: AlignWithSpaces
-TabWidth: 4
-IndentWidth: 4
-IndentAccessModifiers: false
-AccessModifierOffset: -4
+UseTab:			AlignWithSpaces
+TabWidth:		4
+IndentWidth:		4
+IndentAccessModifiers:	false
+AccessModifierOffset:	-4
+AccessModifierOffset:	-4
+...
