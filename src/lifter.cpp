@@ -238,14 +238,13 @@ void liftToLowLevelIL(Architecture *arch, const uint8_t* data, uint64_t addr, si
 			il.And(8, il.Register(8, inst.rs1), il.Const(12, inst.imm)));
 		break;
 	case SLLI:
-		expr = il.SetRegister(
-			8, inst.rd,
-			il.ShiftLeft(8, il.Register(8, inst.rs1), il.Const(8, inst.funct3)));
+		expr = il.SetRegister(8, inst.rd,
+			il.ShiftLeft(8, il.Register(8, inst.rs1), il.Const(8, inst.imm)));
 		break;
 	case SRLI:
 		expr = il.SetRegister(8, inst.rd,
-			il.ArithShiftRight(8, il.Register(4, inst.rs1),
-				il.Const(8, inst.funct3)));
+			il.ArithShiftRight(8, il.Register(8, inst.rs1),
+				il.Const(8, inst.imm)));
 		break;
 	case SLL:
 		expr = il.SetRegister(8, inst.rd, il.ShiftLeft(8, il.Register(8, inst.rs1), il.Register(8, inst.rs2)));
@@ -307,27 +306,24 @@ void liftToLowLevelIL(Architecture *arch, const uint8_t* data, uint64_t addr, si
 		break;
 	case SRAI:
 		expr = il.SetRegister(8, inst.rd,
-			il.ArithShiftRight(8, il.Register(8, inst.rs1),
-				il.Const(8, inst.funct3)));
+			il.ArithShiftRight(8, il.Register(8, inst.rs1), il.Const(8, inst.imm & 0xf)));
 		break;
 	case ADDIW:
 		expr = il.SetRegister(
-			8, inst.rd, il.Add(8, il.Register(8, inst.rs1), il.Const(8, inst.imm)));
+			8, inst.rd, il.Add(4, il.Register(4, inst.rs1), il.Const(4, inst.imm)));
 		break;
 	case SLLIW:
 		expr = il.SetRegister(
 			4, inst.rd,
-			il.ShiftLeft(4, il.Register(4, inst.rs1), il.Const(4, inst.funct3)));
+			il.ShiftLeft(4, il.Register(4, inst.rs1), il.Const(4, inst.rs2)));
 		break;
 	case SRLIW:
 		expr = il.SetRegister(4, inst.rd,
-			il.LogicalShiftRight(4, il.Register(4, inst.rs1),
-				il.Const(4, inst.funct3)));
+			il.LogicalShiftRight(4, il.Register(4, inst.rs1), il.Const(4, inst.rs2)));
 		break;
 	case SRAIW:
 		expr = il.SetRegister(4, inst.rd,
-			il.ArithShiftRight(4, il.Register(4, inst.rs1),
-				il.Const(4, inst.funct3)));
+			il.ArithShiftRight(4, il.Register(4, inst.rs1), il.Const(4, inst.rs2)));
 		break;
 	case ADDW:
 		expr = il.SetRegister(4, inst.rd,

@@ -162,15 +162,15 @@ Instruction Disassembler::disasm(const uint8_t* data, uint64_t addr) {
 			instr.mnemonic = InstrName::ANDI;
 			break;
 		case 0b001:
-			instr = implRtype(*insdword);
 			instr.mnemonic = InstrName::SLLI;
 			break;
 		case 0b101: {
-			instr = implRtype(*insdword);
-			if (instr.funct7 == 0)
+			if ((instr.imm >> 30) == 0)
 				instr.mnemonic = InstrName::SRLI;
 			else
 				instr.mnemonic = InstrName::SRAI;
+
+			instr.imm = instr.imm & 0x3f;
 			break;
 		}
 		default:
