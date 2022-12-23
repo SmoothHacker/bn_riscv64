@@ -294,10 +294,9 @@ Instruction Disassembler::disasm(const uint8_t* data, uint64_t addr) {
 		}
 		return instr;
 	default:
-	/*
 		BinaryNinja::Log(ErrorLog,
 			"Unimplemented instr - Addr: 0x%llx, Opcode: 0x%x\n", addr,
-			opcode);*/
+			opcode);
 		instr.type = InstrType::Error;
 		instr.mnemonic = InstrName::UNSUPPORTED;
 		return instr;
