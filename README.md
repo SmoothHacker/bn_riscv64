@@ -1,6 +1,6 @@
 # BN_RISCV_Arch
 
-A C++ architecture plugin for RISC-V 64.
+A C++ architecture plugin for RISC-V 64I.
 
 ## Get Started
 Simply clone the repository and the API submodule
@@ -17,3 +17,9 @@ Simply configure the project using CMake, then build and install to your plugins
 cmake -S . -B build # -GNinja ...
 cmake --build build -j $(nproc) -t install
 ```
+
+## TODO
+ * Add Support for the following extensions
+    * Multiplication and Division
+    * Single-Precision Floating-Point
+    * Double-Precision Floating-Point
