@@ -4,7 +4,7 @@ Instruction Disassembler::disasm(const uint8_t* data, uint64_t addr)
 {
 	uint32_t* insdword = (uint32_t*)data;
 
-	uint8_t opcode = *insdword & 0b1111111;
+	const uint8_t opcode = *insdword & 0b1111111;
 	Instruction instr {
 		.type = InstrType::Error,
 	};

@@ -5,8 +5,8 @@
 ExprId cond_branch(Architecture* arch, BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 	ExprId condition)
 {
-	uint64_t dest = inst.imm + il.GetCurrentAddress();
-	uint64_t nextInst = il.GetCurrentAddress() + 4;
+	const uint64_t dest = inst.imm + il.GetCurrentAddress();
+	const uint64_t nextInst = il.GetCurrentAddress() + 4;
 
 	BNLowLevelILLabel* trueLabel = il.GetLabelForAddress(arch, dest);
 	BNLowLevelILLabel* falseLabel = il.GetLabelForAddress(arch, nextInst);
@@ -40,8 +40,8 @@ ExprId store_helper(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 	if (inst.rs2 == Registers::Zero) {
 		return il.Nop();
 	}
-	ExprId addr = il.Add(8, il.Register(8, inst.rs1), il.Const(8, inst.imm));
-	ExprId val = il.Register(8, inst.rs2);
+	const ExprId addr = il.Add(8, il.Register(8, inst.rs1), il.Const(8, inst.imm));
+	const ExprId val = il.Register(8, inst.rs2);
 	return il.Store(size, addr, val);
 };
 
@@ -51,7 +51,7 @@ ExprId load_helper(BinaryNinja::LowLevelILFunction& il, Instruction& inst,
 	if (inst.rd == Registers::Zero) {
 		return il.Nop();
 	}
-	ExprId addr = il.Add(8, il.Register(8, inst.rs1), il.Const(8, inst.imm));
+	const ExprId addr = il.Add(8, il.Register(8, inst.rs1), il.Const(8, inst.imm));
 	if (inst.mnemonic == InstrName::LW)
 		return il.SetRegister(8, inst.rd, il.Load(size, addr));
 	else if (shouldZeroExtend)
@@ -88,7 +88,7 @@ void liftToLowLevelIL(Architecture* arch, const uint8_t* data, uint64_t addr, si
 		il.AddInstruction(il.SetRegister(8, inst.rd, il.Const(8, addr + 4)));
 
 		// Jump
-		ExprId target = il.Add(8, il.Const(8, addr), il.Const(8, inst.imm));
+		const ExprId target = il.Add(8, il.Const(8, addr), il.Const(8, inst.imm));
 		expr = il.Jump(target);
 	} break;
 	case JALR: {
@@ -107,7 +107,7 @@ void liftToLowLevelIL(Architecture* arch, const uint8_t* data, uint64_t addr, si
 		    // pop
 		}*/
 
-		ExprId target = il.Add(8, il.Const(8, inst.imm), il.Register(8, inst.rs1));
+		const ExprId target = il.Add(8, il.Const(8, inst.imm), il.Register(8, inst.rs1));
 		expr = il.Call(target);
 		/*
 		        ExprId rs1;

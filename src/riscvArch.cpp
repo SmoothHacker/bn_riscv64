@@ -16,7 +16,7 @@ size_t riscvArch::GetAddressSize() const
 // Responsible for disassembling instructions and feeding BN info for the CFG
 bool riscvArch::GetInstructionInfo(const uint8_t* data, uint64_t addr, size_t maxLen, BinaryNinja::InstructionInfo& result)
 {
-	Instruction res = Disassembler::disasm(data, addr);
+	const Instruction res = Disassembler::disasm(data, addr);
 	if (res.type == InstrType::Error || maxLen < 4) {
 		result.length = 0;
 		return false;
@@ -51,7 +51,7 @@ bool riscvArch::GetInstructionInfo(const uint8_t* data, uint64_t addr, size_t ma
 bool riscvArch::GetInstructionText(const uint8_t* data, uint64_t addr, size_t& len,
 	std::vector<BinaryNinja::InstructionTextToken>& result)
 {
-	Instruction res = Disassembler::disasm(data, addr);
+	const Instruction res = Disassembler::disasm(data, addr);
 	if (res.type == InstrType::Error) {
 		len = 0;
 		return false;
@@ -60,7 +60,7 @@ bool riscvArch::GetInstructionText(const uint8_t* data, uint64_t addr, size_t& l
 #define PADDING_SIZE 6
 	char padding[PADDING_SIZE + 1];
 	memset(padding, 0x20, sizeof(padding));
-	size_t mnemonicLen = strlen(instrNames[res.mnemonic]);
+	const size_t mnemonicLen = strlen(instrNames[res.mnemonic]);
 	if (mnemonicLen < PADDING_SIZE) {
 		padding[PADDING_SIZE - mnemonicLen] = '\0';
 	} else
@@ -197,9 +197,9 @@ std::vector<uint32_t> riscvArch::GetFullWidthRegisters()
 
 std::vector<uint32_t> riscvArch::GetAllRegisters()
 {
-	std::vector<uint32_t> result;
+	std::vector<uint32_t> result(32);
 	for (int i = 0; i < 33; ++i) {
-		result.push_back(i);
+		result[i] = i;
 	}
 	return result;
 }
