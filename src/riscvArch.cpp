@@ -198,7 +198,7 @@ std::vector<uint32_t> riscvArch::GetFullWidthRegisters()
 std::vector<uint32_t> riscvArch::GetAllRegisters()
 {
 	std::vector<uint32_t> result(32);
-	for (int i = 0; i < 33; ++i) {
+	for (int i = 0; i < 32; ++i) {
 		result[i] = i;
 	}
 	return result;
